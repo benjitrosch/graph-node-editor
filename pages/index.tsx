@@ -1,16 +1,43 @@
 import type { NextPage } from 'next'
 
-import { NodeData } from "../types/nodes"
+import { NodeMeta } from "../types/nodes"
 
 import Graph from '../components/Graph'
 
-const data: NodeData[] = [
+const data: NodeMeta[] = [
   {
     id: 0,
     content: <span>sender</span>,
     position: { x: 50, y: 50 },
     size: { width: 0, height: 0 },
-    connections: [1]
+    connections: [
+      {
+        dataId: 0,
+        to: {
+          nodeId: 1,
+          dataId: 0,
+        }
+      },
+      {
+        dataId: 1,
+        to: {
+          nodeId: 1,
+          dataId: 1,
+        }
+      }
+    ],
+    data: [
+      {
+        id: 0,
+        title: 'fruit',
+        value: 'banana',
+      },
+      {
+        id: 1,
+        title: 'num',
+        value: 5,
+      },
+    ]
   },
   {
     id: 1,
@@ -18,13 +45,45 @@ const data: NodeData[] = [
     position: { x: 500, y: 150 },
     size: { width: 0, height: 0 },
     connections: [],
+    data: [
+      {
+        id: 0,
+        title: 'fruit',
+        value: [] as string[],
+      },
+      {
+        id: 1,
+        title: 'num',
+        value: 0,
+      },
+    ]
   },
   {
     id: 2,
     content: <span>sender</span>,
     position: { x: 150, y: 300 },
     size: { width: 0, height: 0 },
-    connections: [1],
+    connections: [
+      {
+        dataId: 1,
+        to: {
+          nodeId: 1,
+          dataId: 1,
+        }
+      }
+    ],
+    data: [
+      {
+        id: 0,
+        title: 'fruit',
+        value: 'apple',
+      },
+      {
+        id: 1,
+        title: 'num',
+        value: 8,
+      },
+    ]
   },
 ]
 

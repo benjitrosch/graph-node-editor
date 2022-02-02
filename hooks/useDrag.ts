@@ -8,12 +8,12 @@ export enum DragState {
     MOVE    = 2,
 }
 
-export default function useDrag(
+export const useDrag = (
     x = 0,
     y = 0,
     offsetX = 0,
     offsetY = 0
-) {
+) => {
     const [state, setState] = useState(DragState.IDLE)   
 
     const [mouse, setMouse] = useState<Position>({ x, y })
@@ -23,6 +23,8 @@ export default function useDrag(
     const ref = useRef<HTMLDivElement>(null)
 
     const onMouseDown = (e: MouseEvent) => {
+        e.stopPropagation()
+
         const parentElement = ref.current?.offsetParent as HTMLElement
         if (e.button !== 0 || !ref.current || !parentElement) {
             return
@@ -42,6 +44,8 @@ export default function useDrag(
     }
 
     const onMouseMove = (e: MouseEvent) => {
+        e.stopPropagation()
+
         const parentElement = ref.current?.offsetParent as HTMLElement
         if (!(state === DragState.ACTIVE || state === DragState.MOVE) || !ref.current || !parentElement) {
             return
@@ -106,3 +110,5 @@ export default function useDrag(
         delta
     }
 }
+
+export default useDrag

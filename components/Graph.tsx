@@ -1,14 +1,16 @@
 import { FC, useEffect, useState } from "react"
 
 import { Position } from "../types/bounds"
-import { NodeData } from "../types/nodes"
+import { NodeDataRowRef, NodeMeta } from "../types/nodes"
 import useDrag from "../hooks/useDrag"
 
 import Node from '../components/Node'
 import Background from "./Background"
+import DataRow from "./DataRow"
+import Connector from "./Connector"
 
 type Props = {
-    data?: NodeData[]
+    data?: NodeMeta[]
     width?: number
     height?: number
 }
@@ -18,12 +20,26 @@ const Graph: FC<Props> = ({
     width = 1920,
     height = 1080,
 }) => {
-    const [nodes, setNodes] = useState<NodeData[]>(data)
+    const [nodes, setNodes] = useState<NodeMeta[]>(data)
     const [activeNode, setActiveNode] = useState<number>(-1)
-
+    const [dataRowRefs, setDataRowRefs] = useState<NodeDataRowRef[]>([])
+    
     const [offset, setOffset] = useState<Position>({ x: 0, y: 0 })
 
     const { state, position, ref } = useDrag(0, 0, offset.x, offset.y)
+
+    const svgSizeProps = {
+        width,
+        height,
+        viewBox: `0 0 ${width} ${height}`
+    }
+
+    const lineStyle = {
+        stroke: "#000000",
+        strokeWidth: "1"
+    }
+
+    const r = 8
 
     useEffect(() => {
         setOffset(position)  
@@ -45,7 +61,7 @@ const Graph: FC<Props> = ({
         setActiveNode(-1)
     }
 
-    const updateNodeData = (id: number, data: NodeData) => {
+    const updateNodeMeta = (id: number, data: NodeMeta) => {
         const index = nodes.findIndex((node) => node.id === id)
         const newNodes = [...nodes]
 
@@ -54,14 +70,14 @@ const Graph: FC<Props> = ({
         setNodes(newNodes)
     }
 
-    const nodeById = (id: number): NodeData => {
+    const nodeById = (id: number): NodeMeta => {
         const index = nodes.findIndex((node) => node.id === id)
         return nodes[index]
     }    
 
     return (
         <div
-            className='relative z-50 pointer-events-none'
+            className='relative z-50 overflow-hidden pointer-events-none'
             style={{
                 width,
                 height
@@ -76,78 +92,70 @@ const Graph: FC<Props> = ({
             {nodes.map((node) => {
                 return (
                     <div key={node.id}>
-                    <Node
-                        data={node}
-                        offset={offset}
-                        selectNode={() => selectNode(node.id)}
-                        deselectNode={deselectNode}
-                        updateNodeData={(data: NodeData) => updateNodeData(node.id, data)}
-                    >
-                        {node.content}
-                    </Node>
-
-                    {node.connections.map((connection, i) => {
-                        const n0 = nodeById(node.id)
-                        const n1 = nodeById(connection)
-
-                        const p0 = { x: n0.position.x + offset.x, y: n0.position.y + offset.y }
-                        const p1 = { x: n1.position.x + offset.x, y: n1.position.y + offset.y }
-
-                        const x0 = p0.x + n0.size.width
-                        const y0 = p0.y + (n0.size.height * 0.5)
-                        const x1 = p1.x
-                        const y1 = p1.y + (n1.size.height * 0.5)
-
-                        const cx = (x0 + x1) / 2
-                        const cy = (y0 + y1) / 2
-
-                        const r = 3
-
-                        const lineStyle = {
-                            stroke: "#000000",
-                            strokeWidth: "1"
-                        }
-
-                        const dotStyle = {
-                            stroke: "#ffffff",
-                            strokeWidth: "1"
-                        }
-
-                        return (
-                        <svg
-                            key={i}
-                            className='absolute z-50'
-                            width={width}
-                            height={height}
-                            viewBox={`0 0 ${width} ${height}`}
+                        <Node
+                            data={node}
+                            offset={offset}
+                            selectNode={() => selectNode(node.id)}
+                            deselectNode={deselectNode}
+                            updateNodeMeta={(data: NodeMeta) => updateNodeMeta(node.id, data)}
                         >
-                            <path
-                                className='path'
-                                d={`M${x0},${y0}
-                                    C${cx},${y0} ${cx},${y1}
-                                    ${x1},${y1}`}
-                                fill="none"
-                                {...lineStyle}
-                            />
+                            {node.content}
+                            {node.data?.map((data, i) => {
+                                return (
+                                    <DataRow
+                                        key={`node_${node.id}_data_${data.id}_#${i}`}
+                                        title={data.title}
+                                        value={data.value}
+                                    />
+                                )
+                            })}
+                        </Node>
 
-                            {i === 0 && <circle
-                                cx={x0 - (r * 0.5)}
-                                cy={y0}
-                                r={r}
-                                fill="#ff0000"
-                                {...dotStyle}
-                            />}
+                        {node.connections.map((connection, i) => {
+                            const n0 = nodeById(node.id)
+                            const n1 = nodeById(connection.to.nodeId)
 
-                            <circle
-                                cx={x1 + (r * 0.5)}
-                                cy={y1}
-                                r={r}
-                                fill="#0000ff"
-                                {...dotStyle}
-                            />
-                        </svg>
-                        )
-                    })}
+                            const p0 = { x: n0.position.x + offset.x, y: n0.position.y + offset.y }
+                            const p1 = { x: n1.position.x + offset.x, y: n1.position.y + offset.y }
+
+                            const x0 = p0.x + n0.size.width
+                            const y0 = p0.y + (n0.size.height * 0.5)
+                            const x1 = p1.x
+                            const y1 = p1.y + (n1.size.height * 0.5)
+
+                            const cx = (x0 + x1) / 2
+                            const cy = (y0 + y1) / 2
+
+                            return (
+                                <div
+                                    key={`node_${node.id}_connection_${i}_${i}`}
+                                >
+                                    <Connector
+                                        position={{ x: x0 - (r * 0.5), y: y0 - (r * 0.5) }}
+                                        radius={r}
+                                    />
+
+                                    <Connector
+                                        position={{ x: x1 - (r * 0.5), y: y1 - (r * 0.5) }}
+                                        radius={r}
+                                    />
+
+                                    <svg
+                                        className='absolute z-50'
+                                        {...svgSizeProps}
+                                    >
+                                        <path
+                                            className='path'
+                                            d={`M${x0},${y0}
+                                                C${cx},${y0} ${cx},${y1}
+                                                ${x1},${y1}`}
+                                            fill="none"
+                                            {...lineStyle}
+                                        />
+                                    </svg>
+                                </div>
+                            )
+                        })}
                     </div>
                 )
             })}

@@ -3,18 +3,18 @@ import { CSSProperties, FC, ReactNode, useEffect } from "react"
 import clsx from 'clsx'
 
 import { Position } from "../types/bounds"
-import { NodeData } from "../types/nodes"
+import { NodeMeta } from "../types/nodes"
 import useDrag, { DragState } from "../hooks/useDrag"
 
 type Props = {
-    data: NodeData
+    data: NodeMeta
     offset: Position
     children: ReactNode
     className?: string,
     style?: CSSProperties
     selectNode: () => void
     deselectNode: () => void
-    updateNodeData: (data: NodeData) => void
+    updateNodeMeta: (data: NodeMeta) => void
 }
 
 const Node: FC<Props> = ({
@@ -25,13 +25,13 @@ const Node: FC<Props> = ({
     style,
     selectNode,
     deselectNode,
-    updateNodeData
+    updateNodeMeta
 }) => {
     const { position } = data
     const { state, position: elementPosition, ref } = useDrag(position.x, position.y, -offset.x, -offset.y)
 
     const classes = clsx(
-        "node absolute w-fit h-fit z-30 px-4 py-2 bg-white border border-black rounded cursor-pointer select-none pointer-events-auto",
+        "absolute w-fit h-fit z-10 bg-white border border-black rounded cursor-pointer select-none pointer-events-auto",
         className,
         {
             "active": state === DragState.MOVE || state === DragState.ACTIVE,
@@ -51,7 +51,7 @@ const Node: FC<Props> = ({
     useEffect(() => {
         const element = ref.current
         if (element != null) {
-            updateNodeData({
+            updateNodeMeta({
                 ...data,
                 position: {
                     x: elementPosition.x,
