@@ -42,9 +42,17 @@ const data: NodeMeta[] = [
   {
     id: 1,
     content: <span>receiver</span>,
-    position: { x: 500, y: 150 },
+    position: { x: 300, y: 150 },
     size: { width: 0, height: 0 },
-    connections: [],
+    connections: [
+      {
+        dataId: 1,
+        to: {
+          nodeId: 3,
+          dataId: 0,
+        }
+      }
+    ],
     data: [
       {
         id: 0,
@@ -65,6 +73,13 @@ const data: NodeMeta[] = [
     size: { width: 0, height: 0 },
     connections: [
       {
+        dataId: 0,
+        to: {
+          nodeId: 1,
+          dataId: 0,
+        }
+      },
+      {
         dataId: 1,
         to: {
           nodeId: 1,
@@ -82,6 +97,20 @@ const data: NodeMeta[] = [
         id: 1,
         title: 'num',
         value: 8,
+      },
+    ]
+  },
+  {
+    id: 3,
+    content: <span>receiver</span>,
+    position: { x: 500, y: 150 },
+    size: { width: 0, height: 0 },
+    connections: [],
+    data: [
+      {
+        id: 0,
+        title: 'num',
+        value: 5,
       },
     ]
   },

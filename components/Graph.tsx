@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react"
 
 import { Position } from "../types/bounds"
-import { NodeDataRowRef, NodeMeta } from "../types/nodes"
+import { NodeData, NodeDataRowRef, NodeMeta } from "../types/nodes"
 import useDrag from "../hooks/useDrag"
 
 import Node from '../components/Node'
@@ -75,6 +75,34 @@ const Graph: FC<Props> = ({
         return nodes[index]
     }    
 
+    const checkDataSources = (id: number, data: number) => {
+        const sources = nodes.reduce((values, node) => {
+            const connection = node.connections.find((c) => c.to.nodeId === id && c.to.dataId === data)
+            if (connection != null) {
+                const dataId = connection.dataId
+                const nodeData = node.data?.find((d) => d.id === dataId)
+
+                if (nodeData != null) {
+                    const mod = checkDataSources(node.id, dataId)
+                    const value = mod ? { ...nodeData, value: nodeData.value + mod } : nodeData
+                    
+                    values.push(value)
+                }
+            }
+
+            return values
+        }, [] as any[])
+
+        if (!sources.length) {
+            return null
+        }
+
+        return sources.reduce((acc, data, i) => {
+            if (i === 0) return acc
+            return acc + data.value
+        }, sources[0].value)
+    }
+
     return (
         <div
             className='relative z-50 overflow-hidden pointer-events-none'
@@ -101,11 +129,14 @@ const Graph: FC<Props> = ({
                         >
                             {node.content}
                             {node.data?.map((data, i) => {
+                                const mod = checkDataSources(node.id, data.id)
+                                const value = mod ? data.value + mod : data.value
+
                                 return (
                                     <DataRow
                                         key={`node_${node.id}_data_${data.id}_#${i}`}
                                         title={data.title}
-                                        value={data.value}
+                                        value={value}
                                     />
                                 )
                             })}
@@ -119,9 +150,9 @@ const Graph: FC<Props> = ({
                             const p1 = { x: n1.position.x + offset.x, y: n1.position.y + offset.y }
 
                             const x0 = p0.x + n0.size.width
-                            const y0 = p0.y + (n0.size.height * 0.5)
+                            const y0 = p0.y + (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
                             const x1 = p1.x
-                            const y1 = p1.y + (n1.size.height * 0.5)
+                            const y1 = p1.y + (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
 
                             const cx = (x0 + x1) / 2
                             const cy = (y0 + y1) / 2

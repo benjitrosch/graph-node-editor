@@ -17,6 +17,8 @@ export type NodeData<T> = {
     value: T
 }
 
+export type NodeDataTypes = string | number | boolean
+
 export type NodeDataConnection = {
     dataId: number,
     to: {

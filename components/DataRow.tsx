@@ -1,10 +1,12 @@
+import { NodeDataTypes } from "../types/nodes"
+
 type Props<T> = {
     title: string
     value: T
 }
 
 const DataRow = 
-    <T extends string | number | boolean>
+    <T extends NodeDataTypes>
 ({
     title,
     value
