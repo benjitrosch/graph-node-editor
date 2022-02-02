@@ -5,6 +5,7 @@ import { NodeData } from "../types/nodes"
 import useDrag from "../hooks/useDrag"
 
 import Node from '../components/Node'
+import Background from "./Background"
 
 type Props = {
     data?: NodeData[]
@@ -60,13 +61,14 @@ const Graph: FC<Props> = ({
 
     return (
         <div
-            className='relative z-50 border-2 border-black pointer-events-none'
+            className='relative z-50 pointer-events-none'
             style={{
                 width,
                 height
             }}
         >
-            <div
+            <Background
+                offset={offset}
                 ref={ref}
                 className={`w-full h-full absolute z-10 cursor-move ${activeNode === -1 && 'pointer-events-auto'}`}
             />

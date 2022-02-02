@@ -30,12 +30,18 @@ const data: NodeData[] = [
 
 const Home: NextPage = () => {
   return (
-    <div className='w-screen h-screen'>
+    <div className='w-screen h-screen flex flex-col items-center justify-center'>
+      <h1 className='text-lg font-bold'>
+        Graph Node Editor
+      </h1>
+
       <Graph
         data={data}
         width={640}
         height={480}
       />
+
+      <p>by Benjamin Trosch</p>
     </div>
   )
 }
