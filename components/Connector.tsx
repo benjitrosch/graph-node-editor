@@ -1,4 +1,4 @@
-import { FC, useEffect } from "react"
+import { FC, useEffect, useRef } from "react"
 
 import { Position } from "../types/bounds"
 import useDrag, { DragState } from "../hooks/useDrag"
@@ -26,6 +26,7 @@ const Connector: FC<Props> = ({
 }) => {
     const { x, y } = position
     const { elementBelow, state, mouse, ref } = useDrag(x, y, offset.x, offset.y)
+    const prevState = useRef<DragState>(DragState.IDLE)
 
     useEffect(() => {
         if (state === DragState.MOVE) {
@@ -35,12 +36,15 @@ const Connector: FC<Props> = ({
         if (state === DragState.IDLE) {
             deselectConnector()
 
-            if (elementBelow != null) { 
+            if (elementBelow != null && prevState.current === DragState.MOVE) { 
                 const [nodeId, dataId] = parseConnectorId(elementBelow)
                 connectNodeDataRows(nodeId, dataId)
             }
         }
-    }, [state, mouse])
+
+        prevState.current = state
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [state, mouse, elementBelow])
 
     const parseConnectorId = (id: string): [number, number] => {
         // FIXME: I do not enjoy the idea of parsing a string (w a temp naming convention that I don't want to be tied down to)

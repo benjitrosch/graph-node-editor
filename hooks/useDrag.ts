@@ -21,7 +21,7 @@ export const useDrag = (
     const [position, setPosition] = useState<Position>({ x, y })
     const [delta, setDelta] = useState<Position>({ x, y })
     
-    let ref = useRef<HTMLDivElement>(null)
+    const ref = useRef<HTMLDivElement>(null)
 
     const onMouseDown = (e: MouseEvent) => {
         e.stopPropagation()

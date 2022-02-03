@@ -41,6 +41,7 @@ const Graph: FC<Props> = ({
     }
 
     const r = 8
+    const buttonSize = 32 
 
     useEffect(() => {
         setOffset(position)  
@@ -74,7 +75,25 @@ const Graph: FC<Props> = ({
     const nodeById = (id: number): NodeMeta => {
         const index = nodes.findIndex((node) => node.id === id)
         return nodes[index]
-    }    
+    }  
+    
+    const getMidpointBetweenConnectors = (node: NodeMeta, connection: NodeDataConnection) => {
+        const n0 = nodeById(node.id)
+        const n1 = nodeById(connection.to.nodeId)
+
+        const p0 = { x: n0.position.x + offset.x, y: n0.position.y + offset.y }
+        const p1 = { x: n1.position.x + offset.x, y: n1.position.y + offset.y }
+
+        const x0 = p0.x + n0.size.width
+        const y0 = p0.y + (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
+        const x1 = p1.x
+        const y1 = p1.y + (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
+
+        const cx = (x0 + x1) / 2
+        const cy = (y0 + y1) / 2
+
+        return { x: cx, y: cy }
+    }
 
     const drawConnectorPath = (node: NodeMeta, connection: NodeDataConnection) => {
         const n0 = nodeById(node.id)
@@ -89,7 +108,6 @@ const Graph: FC<Props> = ({
         const y1 = p1.y + (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
 
         const cx = (x0 + x1) / 2
-        const cy = (y0 + y1) / 2
 
         return `M${x0},${y0}
                 C${cx},${y0} ${cx},${y1}
@@ -106,7 +124,6 @@ const Graph: FC<Props> = ({
             const y1 = p1.y
 
             const cx = (x0 + x1) / 2
-            const cy = (y0 + y1) / 2
 
             return `M${x0},${y0}
                     C${cx},${y0} ${cx},${y1}
@@ -129,7 +146,17 @@ const Graph: FC<Props> = ({
         }
 
         node.connections.push(connection)
+        updateNodeMeta(n0, node)
+    }
 
+    const disconnectNodeDataRows = (n0: number, d0: number, n1: number, d1: number) => {
+        const index = nodes.findIndex((node) => node.id === n0)
+        const node = nodes[index]
+
+        const connectionIndex = node.connections.findIndex((connection) =>
+            connection.dataId === d0 && connection.to.nodeId === n1 && connection.to.dataId === d1)
+
+        node.connections.splice(connectionIndex, 1)
         updateNodeMeta(n0, node)
     }
 
@@ -200,7 +227,7 @@ const Graph: FC<Props> = ({
                             })}
                         </Node>
 
-                        {node.data?.map((data, i) => {
+                        {node.data?.map((data) => {
                             const n0 = nodeById(node.id)                        
                             const p0 = { x: n0.position.x, y: n0.position.y }  
                             const x0 = p0.x
@@ -239,6 +266,8 @@ const Graph: FC<Props> = ({
                         })}
 
                         {node.connections.map((connection, i) => {
+                            const { x, y } = getMidpointBetweenConnectors(node, connection)
+                            
                             return (
                                 <div
                                     key={`node_${node.id}_connection_${i}_${i}`}
@@ -253,6 +282,18 @@ const Graph: FC<Props> = ({
                                             fill="none"
                                             {...lineStyle}
                                         />
+                                        <foreignObject
+                                            className="block overflow-hidden"
+                                            width={buttonSize}
+                                            height={buttonSize}
+                                            x={x - buttonSize * 0.25}
+                                            y={y - buttonSize * 0.25}
+                                        >
+                                            <button
+                                                className="w-4 h-4 z-50 text-xs text-white bg-gray-300 border-2 border-white rounded-full cursor-pointer pointer-events-auto"
+                                                onClick={() => disconnectNodeDataRows(node.id, connection.dataId, connection.to.nodeId, connection.to.dataId)}
+                                            />
+                                        </foreignObject>
                                     </svg>
                                 </div>
                             )
