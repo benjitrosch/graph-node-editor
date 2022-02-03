@@ -1,6 +1,6 @@
 import type { NextPage } from 'next'
 
-import { NodeMeta } from "../types/nodes"
+import { NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
 
 import Graph from '../components/Graph'
 
@@ -10,6 +10,7 @@ const data: NodeMeta[] = [
     content: <span>sender</span>,
     position: { x: 25, y: 50 },
     size: { width: 0, height: 0 },
+    type: NodeDataConnectionTypes.SENDER,
     connections: [
       {
         dataId: 0,
@@ -44,6 +45,7 @@ const data: NodeMeta[] = [
     content: <span>receiver</span>,
     position: { x: 150, y: 150 },
     size: { width: 0, height: 0 },
+    type: NodeDataConnectionTypes.CHANNEL,
     connections: [
       {
         dataId: 1,
@@ -71,6 +73,7 @@ const data: NodeMeta[] = [
     content: <span>sender</span>,
     position: { x: 25, y: 300 },
     size: { width: 0, height: 0 },
+    type: NodeDataConnectionTypes.SENDER,
     connections: [
       {
         dataId: 0,
@@ -105,6 +108,7 @@ const data: NodeMeta[] = [
     content: <span>receiver</span>,
     position: { x: 350, y: 150 },
     size: { width: 0, height: 0 },
+    type: NodeDataConnectionTypes.CHANNEL,
     connections: [
       {
         dataId: 0,
@@ -134,6 +138,7 @@ const data: NodeMeta[] = [
     content: <span>receiver</span>,
     position: { x: 500, y: 150 },
     size: { width: 0, height: 0 },
+    type: NodeDataConnectionTypes.RECEIVER,
     connections: [],
     data: [
       {
@@ -148,6 +153,7 @@ const data: NodeMeta[] = [
     content: <span>receiver</span>,
     position: { x: 500, y: 350 },
     size: { width: 0, height: 0 },
+    type: NodeDataConnectionTypes.RECEIVER,
     connections: [],
     data: [
       {

@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react"
 
 import { Position } from "../types/bounds"
-import { NodeDataConnection, NodeDataRowRef, NodeMeta } from "../types/nodes"
+import { NodeDataConnection, NodeDataConnectionTypes, NodeDataRowRef, NodeMeta } from "../types/nodes"
 import useDrag from "../hooks/useDrag"
 
 import Node from '../components/Node'
@@ -206,31 +206,34 @@ const Graph: FC<Props> = ({
                             const x0 = p0.x
                             const y0 = p0.y + (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
                             
+                            const receiver = (<Connector
+                                            nodeId={node.id}
+                                            dataId={data.id}
+                                            position={{ x: x0 - (r * 0.5), y: y0 - (r * 0.5) }}
+                                            offset={offset}
+                                            radius={r}
+                                            setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + offset.x, y: y0 + offset.y }, mouse])}
+                                            deselectConnector={() => setConnectorPoints(null)}
+                                            connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, node.id, data.id)}
+                                        />)
+
+                            const sender = (<Connector
+                                            nodeId={node.id}
+                                            dataId={data.id}
+                                            position={{ x: x0 + n0.size.width - (r * 0.5), y: y0 - (r * 0.5) }}
+                                            offset={offset}
+                                            radius={r}
+                                            setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + n0.size.width + offset.x, y: y0 + offset.y }, mouse])}
+                                            deselectConnector={() => setConnectorPoints(null)}
+                                            connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, data.id, n1, d1)}
+                                        />)
+
                             return (
                                 <div 
                                     key={`node_${node.id}_data_${data.id}_connectors`}
                                 >
-                                    <Connector
-                                        nodeId={node.id}
-                                        dataId={data.id}
-                                        position={{ x: x0 - (r * 0.5), y: y0 - (r * 0.5) }}
-                                        offset={offset}
-                                        radius={r}
-                                        setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + offset.x, y: y0 + offset.y }, mouse])}
-                                        deselectConnector={() => setConnectorPoints(null)}
-                                        connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, node.id, data.id)}
-                                    />
-
-                                    <Connector
-                                        nodeId={node.id}
-                                        dataId={data.id}
-                                        position={{ x: x0 + n0.size.width - (r * 0.5), y: y0 - (r * 0.5) }}
-                                        offset={offset}
-                                        radius={r}
-                                        setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + n0.size.width + offset.x, y: y0 + offset.y }, mouse])}
-                                        deselectConnector={() => setConnectorPoints(null)}
-                                        connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, data.id, n1, d1)}
-                                    />
+                                    {node.type == (node.type | NodeDataConnectionTypes.RECEIVER) && receiver}
+                                    {node.type == (node.type | NodeDataConnectionTypes.SENDER) && sender}
                                 </div>
                             )
                         })}

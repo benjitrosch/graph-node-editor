@@ -7,6 +7,7 @@ export type NodeMeta = {
     content: ReactNode
     position: Position
     size: Size
+    type: NodeDataConnectionTypes
     connections: NodeDataConnection[]
     data?: NodeData<any>[]
 }
@@ -18,6 +19,12 @@ export type NodeData<T> = {
 }
 
 export type NodeDataTypes = string | number | boolean
+
+export enum NodeDataConnectionTypes {
+    SENDER      = 1 << 0,
+    RECEIVER    = 1 << 1,
+    CHANNEL     = ~(~0 << 2)
+}
 
 export type NodeDataConnection = {
     dataId: number,
