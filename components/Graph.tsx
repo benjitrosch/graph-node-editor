@@ -200,43 +200,46 @@ const Graph: FC<Props> = ({
                             })}
                         </Node>
 
-                        {node.connections.map((connection, i) => {
-                            const n0 = nodeById(node.id)
-                            const n1 = nodeById(connection.to.nodeId)
-                    
+                        {node.data?.map((data, i) => {
+                            const n0 = nodeById(node.id)                        
                             const p0 = { x: n0.position.x, y: n0.position.y }  
-                            const p1 = { x: n1.position.x, y: n1.position.y }                  
-                            const x0 = p0.x + n0.size.width
-                            const y0 = p0.y + (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
-                            const x1 = p1.x
-                            const y1 = p1.y + (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
-                    
+                            const x0 = p0.x
+                            const y0 = p0.y + (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
+                            
                             return (
-                                <div
-                                    key={`node_${node.id}_connection_${i}_${i}`}
+                                <div 
+                                    key={`node_${node.id}_data_${data.id}_connectors`}
                                 >
                                     <Connector
                                         nodeId={node.id}
-                                        dataId={connection.dataId}
+                                        dataId={data.id}
                                         position={{ x: x0 - (r * 0.5), y: y0 - (r * 0.5) }}
                                         offset={offset}
                                         radius={r}
                                         setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + offset.x, y: y0 + offset.y }, mouse])}
                                         deselectConnector={() => setConnectorPoints(null)}
-                                        connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, connection.dataId, n1, d1)}
+                                        connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, node.id, data.id)}
                                     />
 
                                     <Connector
-                                        nodeId={connection.to.nodeId}
-                                        dataId={connection.to.dataId}
-                                        position={{ x: x1 - (r * 0.5), y: y1 - (r * 0.5) }}
+                                        nodeId={node.id}
+                                        dataId={data.id}
+                                        position={{ x: x0 + n0.size.width - (r * 0.5), y: y0 - (r * 0.5) }}
                                         offset={offset}
                                         radius={r}
-                                        setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x1 + offset.x, y: y1 + offset.y }, mouse])}
+                                        setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + n0.size.width + offset.x, y: y0 + offset.y }, mouse])}
                                         deselectConnector={() => setConnectorPoints(null)}
-                                        connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, connection.to.nodeId, connection.to.dataId)}
+                                        connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, data.id, n1, d1)}
                                     />
+                                </div>
+                            )
+                        })}
 
+                        {node.connections.map((connection, i) => {
+                            return (
+                                <div
+                                    key={`node_${node.id}_connection_${i}_${i}`}
+                                >
                                     <svg
                                         className='absolute z-50 pointer-events-none'
                                         {...svgSizeProps}
