@@ -1,7 +1,7 @@
 import { FC, useEffect, useState } from "react"
 
 import { Position } from "../types/bounds"
-import { NodeData, NodeDataRowRef, NodeMeta } from "../types/nodes"
+import { NodeDataConnection, NodeDataRowRef, NodeMeta } from "../types/nodes"
 import useDrag from "../hooks/useDrag"
 
 import Node from '../components/Node'
@@ -25,6 +25,7 @@ const Graph: FC<Props> = ({
     const [dataRowRefs, setDataRowRefs] = useState<NodeDataRowRef[]>([])
     
     const [offset, setOffset] = useState<Position>({ x: 0, y: 0 })
+    const [connectorPoints, setConnectorPoints] = useState<[Position, Position] | null>(null)
 
     const { state, position, ref } = useDrag(0, 0, offset.x, offset.y)
 
@@ -75,6 +76,63 @@ const Graph: FC<Props> = ({
         return nodes[index]
     }    
 
+    const drawConnectorPath = (node: NodeMeta, connection: NodeDataConnection) => {
+        const n0 = nodeById(node.id)
+        const n1 = nodeById(connection.to.nodeId)
+
+        const p0 = { x: n0.position.x + offset.x, y: n0.position.y + offset.y }
+        const p1 = { x: n1.position.x + offset.x, y: n1.position.y + offset.y }
+
+        const x0 = p0.x + n0.size.width
+        const y0 = p0.y + (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
+        const x1 = p1.x
+        const y1 = p1.y + (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
+
+        const cx = (x0 + x1) / 2
+        const cy = (y0 + y1) / 2
+
+        return `M${x0},${y0}
+                C${cx},${y0} ${cx},${y1}
+                ${x1},${y1}`
+    }
+
+    const drawConnectorToMousePath = () => {
+        if (connectorPoints) {
+            const [p0, p1] = connectorPoints
+
+            const x0 = p0.x
+            const x1 = p1.x
+            const y0 = p0.y
+            const y1 = p1.y
+
+            const cx = (x0 + x1) / 2
+            const cy = (y0 + y1) / 2
+
+            return `M${x0},${y0}
+                    C${cx},${y0} ${cx},${y1}
+                    ${x1},${y1}`
+        }
+        
+        return ''
+    }
+
+    const connectNodeDataRows = (n0: number, d0: number, n1: number, d1: number) => {
+        const index = nodes.findIndex((node) => node.id === n0)
+        const node = nodes[index]
+
+        const connection: NodeDataConnection = {
+            dataId: d0,
+            to: {
+                nodeId: n1,
+                dataId: d1,
+            }
+        }
+
+        node.connections.push(connection)
+
+        updateNodeMeta(n0, node)
+    }
+
     const checkDataSources = (id: number, data: number) => {
         const sources = nodes.reduce((values, node) => {
             const connection = node.connections.find((c) => c.to.nodeId === id && c.to.dataId === data)
@@ -105,16 +163,16 @@ const Graph: FC<Props> = ({
 
     return (
         <div
-            className='relative z-50 overflow-hidden pointer-events-none'
+            className='relative z-0 overflow-hidden'
             style={{
                 width,
                 height
             }}
         >
             <Background
-                offset={offset}
                 ref={ref}
-                className={`w-full h-full absolute z-10 cursor-move ${activeNode === -1 && 'pointer-events-auto'}`}
+                offset={offset}
+                className={`w-full h-full absolute z-10 cursor-move`}
             />
 
             {nodes.map((node) => {
@@ -145,41 +203,47 @@ const Graph: FC<Props> = ({
                         {node.connections.map((connection, i) => {
                             const n0 = nodeById(node.id)
                             const n1 = nodeById(connection.to.nodeId)
-
-                            const p0 = { x: n0.position.x + offset.x, y: n0.position.y + offset.y }
-                            const p1 = { x: n1.position.x + offset.x, y: n1.position.y + offset.y }
-
+                    
+                            const p0 = { x: n0.position.x, y: n0.position.y }  
+                            const p1 = { x: n1.position.x, y: n1.position.y }                  
                             const x0 = p0.x + n0.size.width
                             const y0 = p0.y + (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
                             const x1 = p1.x
                             const y1 = p1.y + (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
-
-                            const cx = (x0 + x1) / 2
-                            const cy = (y0 + y1) / 2
-
+                    
                             return (
                                 <div
                                     key={`node_${node.id}_connection_${i}_${i}`}
                                 >
                                     <Connector
+                                        nodeId={node.id}
+                                        dataId={connection.dataId}
                                         position={{ x: x0 - (r * 0.5), y: y0 - (r * 0.5) }}
+                                        offset={offset}
                                         radius={r}
+                                        setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + offset.x, y: y0 + offset.y }, mouse])}
+                                        deselectConnector={() => setConnectorPoints(null)}
+                                        connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, connection.dataId, n1, d1)}
                                     />
 
                                     <Connector
+                                        nodeId={connection.to.nodeId}
+                                        dataId={connection.to.dataId}
                                         position={{ x: x1 - (r * 0.5), y: y1 - (r * 0.5) }}
+                                        offset={offset}
                                         radius={r}
+                                        setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x1 + offset.x, y: y1 + offset.y }, mouse])}
+                                        deselectConnector={() => setConnectorPoints(null)}
+                                        connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, connection.to.nodeId, connection.to.dataId)}
                                     />
 
                                     <svg
-                                        className='absolute z-50'
+                                        className='absolute z-50 pointer-events-none'
                                         {...svgSizeProps}
                                     >
                                         <path
                                             className='path'
-                                            d={`M${x0},${y0}
-                                                C${cx},${y0} ${cx},${y1}
-                                                ${x1},${y1}`}
+                                            d={drawConnectorPath(node, connection)}
                                             fill="none"
                                             {...lineStyle}
                                         />
@@ -190,6 +254,17 @@ const Graph: FC<Props> = ({
                     </div>
                 )
             })}
+
+            <svg
+                className='absolute z-50 pointer-events-none'
+                {...svgSizeProps}
+            >
+                <path
+                    d={drawConnectorToMousePath()}
+                    fill="none"
+                    {...lineStyle}
+                />
+            </svg>
 
             <style jsx>{`
                 @-webkit-keyframes dash {

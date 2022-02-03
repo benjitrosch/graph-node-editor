@@ -31,7 +31,7 @@ const Node: FC<Props> = ({
     const { state, position: elementPosition, ref } = useDrag(position.x, position.y, -offset.x, -offset.y)
 
     const classes = clsx(
-        "absolute w-fit h-fit z-10 bg-white border border-black rounded cursor-pointer select-none pointer-events-auto",
+        "absolute w-fit h-fit z-20 bg-white border border-black rounded cursor-pointer select-none",
         className,
         {
             "active": state === DragState.MOVE || state === DragState.ACTIVE,

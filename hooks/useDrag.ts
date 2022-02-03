@@ -15,12 +15,13 @@ export const useDrag = (
     offsetY = 0
 ) => {
     const [state, setState] = useState(DragState.IDLE)   
+    const [elementBelow, setElementBelow] = useState<string | null>(null)
 
     const [mouse, setMouse] = useState<Position>({ x, y })
     const [position, setPosition] = useState<Position>({ x, y })
     const [delta, setDelta] = useState<Position>({ x, y })
     
-    const ref = useRef<HTMLDivElement>(null)
+    let ref = useRef<HTMLDivElement>(null)
 
     const onMouseDown = (e: MouseEvent) => {
         e.stopPropagation()
@@ -29,7 +30,7 @@ export const useDrag = (
         if (e.button !== 0 || !ref.current || !parentElement) {
             return
         }
-        
+
         setMouse({
             x: e.x - parentElement.offsetLeft,
             y: e.y - parentElement.offsetTop
@@ -64,7 +65,11 @@ export const useDrag = (
         })
     }
 
-    const onMouseUp = () => {
+    const onMouseUp = (e: MouseEvent) => {
+        const elementBelow = e.target as Element
+        const id = elementBelow.id
+        setElementBelow(id === '' ? null : id)
+
         setState(DragState.IDLE)
     }
 
@@ -107,7 +112,8 @@ export const useDrag = (
         state,
         mouse,
         position,
-        delta
+        delta,
+        elementBelow,
     }
 }
 
