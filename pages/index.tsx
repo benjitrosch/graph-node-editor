@@ -59,7 +59,7 @@ const data: NodeMeta[] = [
       {
         id: 0,
         title: 'fruit',
-        value: [] as string[],
+        value: '',
       },
       {
         id: 1,

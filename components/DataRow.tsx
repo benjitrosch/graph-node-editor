@@ -1,34 +1,109 @@
-import { NodeDataTypes } from "../types/nodes"
+import {
+    CSSProperties,
+    ReactNode,
+    useEffect,
+    useState
+} from "react"
+import clsx from 'clsx'
+
+import { NodeDataTypes, NodeMeta } from "../types/nodes"
 
 type Props<T> = {
+    id: number
     title: string
     value: T
+    node: NodeMeta
+    receiver?: ReactNode
+    sender?: ReactNode
+    editable?: boolean
+    style?: CSSProperties
+    className?: string
+    valueClassName?: string
+    updateNodeMeta: (data: NodeMeta) => void
 }
 
 const DataRow = 
     <T extends NodeDataTypes>
 ({
+    id,
     title,
-    value
+    value,
+    node,
+    receiver,
+    sender,
+    editable,
+    style,
+    className,
+    valueClassName,
+    updateNodeMeta,
 }: Props<T>): JSX.Element => {
+    const [newValue, setNewValue] = useState<T>(value)
+
+    const containerClasses = clsx(
+        "relative w-full h-fit flex items-center justify-between gap-8 p-1 bg-[#2e2e2e] border-t-2 border-[#323232] text-[#999999] text-xs",
+        className,
+    )
+
+    const valueClasses = clsx(
+        "px-1 text-white bg-[#555555] border border-[#777777] rounded",
+        editable && "hover:border-white",
+        valueClassName,
+    )
+
+    useEffect(() => {
+        if (node.data != null) {
+            const newDataSet = [...node.data]
+
+            const index = newDataSet.findIndex((data) => data.id === id)
+            const oldData = newDataSet[index]
+            
+            if (oldData != null) {
+                let newData = newValue
+                if (typeof value === 'number') {
+                    newData = Number(newData) as T
+                }
+
+                oldData.value = newData
+                newDataSet.splice(index, 1, oldData)
+
+                updateNodeMeta({...node, data: newDataSet})
+            }
+        }
+    }, [newValue])
+
+    let type = 'text'
+    if (typeof value === 'number') {
+        type = 'number'
+    }
+
     return (
         <div
-            className="relative w-full h-fit flex items-center justify-between gap-8 p-1 bg-[#2e2e2e] border-t-2 border-[#323232] text-[#999999] text-xs"
+            className={containerClasses}
+            style={style}
         >
             <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#38362f] border border-[#f7d964]" />
+                {receiver}
 
                 <span>{title}</span>
             </div>
 
             <div className="flex items-center gap-2">
-                <span
-                    className="px-1 text-white bg-[#555555] border border-[#777777] rounded"
-                >
-                    {value}
-                </span>
+                {editable ? 
+                (
+                    <input
+                        className={valueClasses}
+                        type={type}
+                        value={newValue}
+                        onChange={(e) => setNewValue(e.currentTarget.value as T)}
+                    />
+                ) :
+                (
+                    <span className={valueClasses}>
+                        {value}
+                    </span>
+                )}
 
-                <div className="w-2 h-2 rounded-full bg-[#c9bb82] border border-[#f7d964]" />
+                {sender}
             </div>
         </div>
     )

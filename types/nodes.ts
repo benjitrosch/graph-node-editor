@@ -10,7 +10,7 @@ export type NodeMeta = {
     size: Size
     type: NodeDataConnectionTypes
     connections: NodeDataConnection[]
-    data?: NodeData<any>[]
+    data?: NodeData<NodeDataTypes>[]
 }
 
 export type NodeData<T> = {
@@ -19,7 +19,7 @@ export type NodeData<T> = {
     value: T
 }
 
-export type NodeDataTypes = string | number | boolean
+export type NodeDataTypes = string | number
 
 export enum NodeDataConnectionTypes {
     SENDER      = 1 << 0,

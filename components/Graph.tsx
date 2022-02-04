@@ -1,7 +1,7 @@
 import { createRef, FC, RefObject, useEffect, useRef, useState } from "react"
 
 import { Position } from "../types/bounds"
-import { NodeDataConnection, NodeDataConnectionTypes, NodeDataRowRef, NodeMeta } from "../types/nodes"
+import { NodeDataConnection, NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
 import useDrag from "../hooks/useDrag"
 
 import Node, { NodeRef } from '../components/Node'
@@ -20,10 +20,11 @@ const Graph: FC<Props> = ({
     width = 1920,
     height = 1080,
 }) => {
-    const [nodes, setNodes] = useState<NodeMeta[]>(data)
+    const graphRef = useRef<HTMLDivElement>(null)
+
     const nodeRefs = useRef<RefObject<NodeRef>[]>([])
+    const [nodes, setNodes] = useState<NodeMeta[]>(data)
     const [activeNode, setActiveNode] = useState<number>(-1)
-    const [dataRowRefs, setDataRowRefs] = useState<NodeDataRowRef[]>([])
     
     const [offset, setOffset] = useState<Position>({ x: 0, y: 0 })
     const [connectorPoints, setConnectorPoints] = useState<[Position, Position] | null>(null)
@@ -42,7 +43,7 @@ const Graph: FC<Props> = ({
     }
 
     const r = 8
-    const buttonSize = 32 
+    const buttonSize = 12
 
     useEffect(() => {
         for (let i = 0; i < nodes.length; i++) {
@@ -52,6 +53,7 @@ const Graph: FC<Props> = ({
 
     useEffect(() => {
         setOffset(position)  
+        deselectNode()
     }, [position, state])
 
     const selectNode = (id: number) => {
@@ -216,6 +218,7 @@ const Graph: FC<Props> = ({
 
     return (
         <div
+            ref={graphRef}
             className='relative z-0 overflow-hidden bg-[#121212] border border-white rounded'
             style={{
                 width,
@@ -254,90 +257,48 @@ const Graph: FC<Props> = ({
                                 const y0 = p0.y + (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
                                 
                                 const receiver = (<Connector
-                                                nodeId={node.id}
-                                                dataId={data.id}
-                                                position={{ x: x0 - (r * 0.5), y: y0 - (r * 0.5) }}
-                                                offset={offset}
-                                                radius={r}
-                                                hasConnection={nodes.find((n) => n.connections.find((c) => c.to.nodeId === node.id && c.to.dataId === data.id)) != null}
-                                                setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + offset.x, y: y0 + offset.y }, mouse])}
-                                                deselectConnector={() => setConnectorPoints(null)}
-                                                connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, node.id, data.id)}
-                                                style={{
-                                                    zIndex: 20 + i
-                                                }}
-                                            />)
+                                                    nodeId={node.id}
+                                                    dataId={data.id}
+                                                    radius={r}
+                                                    graphRef={graphRef}
+                                                    hasConnection={nodes.find((n) => n.connections.find((c) => c.to.nodeId === node.id && c.to.dataId === data.id)) != null}
+                                                    setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + offset.x, y: y0 + offset.y }, mouse])}
+                                                    deselectConnector={() => setConnectorPoints(null)}
+                                                    connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, node.id, data.id)}
+                                                    style={{
+                                                        zIndex: 20 + i
+                                                    }}
+                                                />)
 
                                 const sender = (<Connector
-                                                nodeId={node.id}
-                                                dataId={data.id}
-                                                position={{ x: x0 + n0.size.width - (r * 0.5), y: y0 - (r * 0.5) }}
-                                                offset={offset}
-                                                radius={r}
-                                                hasConnection={n0.connections.find((c) => c.dataId === data.id) != null}
-                                                setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + n0.size.width + offset.x, y: y0 + offset.y }, mouse])}
-                                                deselectConnector={() => setConnectorPoints(null)}
-                                                connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, data.id, n1, d1)}
-                                                style={{
-                                                    zIndex: 20 + i
-                                                }}
-                                            />)
+                                                    nodeId={node.id}
+                                                    dataId={data.id}
+                                                    radius={r}
+                                                    graphRef={graphRef}
+                                                    hasConnection={n0.connections.find((c) => c.dataId === data.id) != null}
+                                                    setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + n0.size.width + offset.x, y: y0 + offset.y }, mouse])}
+                                                    deselectConnector={() => setConnectorPoints(null)}
+                                                    connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, data.id, n1, d1)}
+                                                    style={{
+                                                        zIndex: 20 + i
+                                                    }}
+                                                />)
 
                                 return (
                                     <DataRow
                                         key={`node_${node.id}_data_${data.id}_#${i}`}
+                                        id={data.id}
                                         title={data.title}
                                         value={value}
+                                        node={node}
+                                        receiver={node.type == (node.type | NodeDataConnectionTypes.RECEIVER) && receiver}
+                                        sender={node.type == (node.type | NodeDataConnectionTypes.SENDER) && sender}
+                                        editable={node.type === NodeDataConnectionTypes.SENDER}
+                                        updateNodeMeta={(data: NodeMeta) => updateNodeMeta(node.id, data)}
                                     />
                                 )
                             })}
                         </Node>
-
-                        {/* {node.data?.map((data) => {
-                            const n0 = nodeById(node.id)                        
-                            const p0 = { x: n0.position.x, y: n0.position.y }  
-                            const x0 = p0.x
-                            const y0 = p0.y + (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
-                            
-                            const receiver = (<Connector
-                                            nodeId={node.id}
-                                            dataId={data.id}
-                                            position={{ x: x0 - (r * 0.5), y: y0 - (r * 0.5) }}
-                                            offset={offset}
-                                            radius={r}
-                                            hasConnection={nodes.find((n) => n.connections.find((c) => c.to.nodeId === node.id && c.to.dataId === data.id)) != null}
-                                            setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + offset.x, y: y0 + offset.y }, mouse])}
-                                            deselectConnector={() => setConnectorPoints(null)}
-                                            connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, node.id, data.id)}
-                                            style={{
-                                                zIndex: 20 + i
-                                            }}
-                                        />)
-
-                            const sender = (<Connector
-                                            nodeId={node.id}
-                                            dataId={data.id}
-                                            position={{ x: x0 + n0.size.width - (r * 0.5), y: y0 - (r * 0.5) }}
-                                            offset={offset}
-                                            radius={r}
-                                            hasConnection={n0.connections.find((c) => c.dataId === data.id) != null}
-                                            setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: x0 + n0.size.width + offset.x, y: y0 + offset.y }, mouse])}
-                                            deselectConnector={() => setConnectorPoints(null)}
-                                            connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, data.id, n1, d1)}
-                                            style={{
-                                                zIndex: 20 + i
-                                            }}
-                                        />)
-
-                            return (
-                                <div 
-                                    key={`node_${node.id}_data_${data.id}_connectors`}
-                                >
-                                    {node.type == (node.type | NodeDataConnectionTypes.RECEIVER) && receiver}
-                                    {node.type == (node.type | NodeDataConnectionTypes.SENDER) && sender}
-                                </div>
-                            )
-                        })} */}
 
                         {node.connections.map((connection, i) => {
                             const { x, y } = getMidpointBetweenConnectors(node, connection)
@@ -369,18 +330,49 @@ const Graph: FC<Props> = ({
                                             fill="none"
                                             {...style}
                                         />
-                                        <foreignObject
-                                            className="block overflow-hidden"
-                                            width={buttonSize}
-                                            height={buttonSize}
-                                            x={x - buttonSize * 0.25}
-                                            y={y - buttonSize * 0.25}
+                                        <g
+                                            transform={`translate(${x},${y})`}
+                                            stroke="#ba0d34"
+                                            strokeWidth="2"
                                         >
-                                            <button
-                                                className="w-4 h-4 text-xs text-white bg-gray-300 border-2 border-white rounded-full cursor-pointer pointer-events-auto"
+                                            <rect
+                                                className="cursor-pointer pointer-events-auto"
+                                                x={-buttonSize * 0.5}
+                                                y={-buttonSize * 0.5}
+                                                width={buttonSize}
+                                                height={buttonSize}
+                                                stroke="transparent"
+                                                fill="transparent"
                                                 onClick={() => disconnectNodeDataRows(node.id, connection.dataId, connection.to.nodeId, connection.to.dataId)}
                                             />
-                                        </foreignObject>
+                                            <path
+                                                fill="none"
+                                                d={`M${-buttonSize * 0.5} ${-buttonSize * 0.5}
+                                                    L${buttonSize * 0.5} ${buttonSize * 0.5}`}
+                                            />
+                                            <path
+                                                fill="none"
+                                                d={`M${buttonSize * 0.5} ${-buttonSize * 0.5}
+                                                    L${-buttonSize * 0.5} ${buttonSize * 0.5}`}
+                                            />
+                                        </g>
+
+                                        {/* <foreignObject
+                                            className="flex overflow-hidden bg-transparent"
+                                            width={buttonSize}
+                                            height={buttonSize}
+                                            x={x - buttonSize * 0.5}
+                                            y={y - buttonSize * 0.5}
+                                        >
+                                            <button
+                                                className="text-white bg-[#ba0d34] rounded-full cursor-pointer pointer-events-auto"
+                                                style={{
+                                                    width: `${buttonSize}px`,
+                                                    height: `${buttonSize}px`,
+                                                }}
+                                                onClick={() => disconnectNodeDataRows(node.id, connection.dataId, connection.to.nodeId, connection.to.dataId)}
+                                            />
+                                        </foreignObject> */}
                                     </svg>
                                 </div>
                             )

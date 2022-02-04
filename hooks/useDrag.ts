@@ -12,7 +12,8 @@ export const useDrag = (
     x = 0,
     y = 0,
     offsetX = 0,
-    offsetY = 0
+    offsetY = 0,
+    parent: HTMLElement | null = null,
 ) => {
     const [state, setState] = useState(DragState.IDLE)   
     const [elementBelow, setElementBelow] = useState<string | null>(null)
@@ -26,7 +27,7 @@ export const useDrag = (
     const onMouseDown = (e: MouseEvent) => {
         e.stopPropagation()
 
-        const parentElement = ref.current?.offsetParent as HTMLElement
+        const parentElement = parent ?? ref.current?.offsetParent as HTMLElement
         if (e.button !== 0 || !ref.current || !parentElement) {
             return
         }
@@ -47,7 +48,7 @@ export const useDrag = (
     const onMouseMove = (e: MouseEvent) => {
         e.stopPropagation()
 
-        const parentElement = ref.current?.offsetParent as HTMLElement
+        const parentElement = parent ?? ref.current?.offsetParent as HTMLElement
         if (!(state === DragState.ACTIVE || state === DragState.MOVE) || !ref.current || !parentElement) {
             return
         }

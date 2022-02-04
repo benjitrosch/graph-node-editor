@@ -4,7 +4,6 @@ import { Position } from "../types/bounds"
 
 type Props = {
     offset: Position,
-    ref: RefObject<HTMLDivElement>
     className: string
 }
 

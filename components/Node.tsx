@@ -48,7 +48,8 @@ const Node = forwardRef(({
     const [expanded, toggleExpanded] = useState<boolean>(true)
 
     const classes = clsx(
-        "absolute w-fit h-fit bg-[#323232] border-l-4 border-[#47a5d3] rounded cursor-pointer select-none",
+        "absolute w-fit h-fit bg-[#323232] border-l-4 border-[#47a5d3] rounded select-none",
+        state === DragState.MOVE || state === DragState.ACTIVE ? 'cursor-grabbing' : 'cursor-grab',
         className,
         {
             "move": state === DragState.MOVE || state === DragState.ACTIVE,
@@ -75,6 +76,7 @@ const Node = forwardRef(({
     useEffect(() => {
         if (state === DragState.ACTIVE) {
             selectNode()
+            toggleExpanded(true)
         }
 
         // if (state === DragState.IDLE) {
@@ -137,7 +139,7 @@ const Node = forwardRef(({
                     height="16px"
                     viewBox="0 0 16 16"
                     onClick={() => toggleExpanded(!expanded)}
-                    className="cursor-pointer transition-all"
+                    className="bg-transparent cursor-pointer transition-all"
                     style={{
                         transform: `rotate(${expanded ? 90 : 0}deg)`,
                         transformOrigin: 'left',

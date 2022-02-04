@@ -1,4 +1,10 @@
-import { CSSProperties, FC, useEffect, useRef } from "react"
+import {
+    CSSProperties,
+    FC,
+    RefObject,
+    useEffect,
+    useRef
+} from "react"
 import clsx from 'clsx'
 
 import { Position } from "../types/bounds"
@@ -7,9 +13,8 @@ import useDrag, { DragState } from "../hooks/useDrag"
 type Props = {
     nodeId: number
     dataId: number
-    position: Position
-    offset: Position
     radius: number
+    graphRef: RefObject<HTMLDivElement>
     hasConnection: boolean
     className?: string,
     style?: CSSProperties
@@ -21,9 +26,8 @@ type Props = {
 const Connector: FC<Props> = ({
     nodeId,
     dataId,
-    position,
-    offset,
     radius,
+    graphRef,
     hasConnection,
     className,
     style,
@@ -31,12 +35,11 @@ const Connector: FC<Props> = ({
     deselectConnector,
     connectNodeDataRows,
 }) => {
-    const { x, y } = position
-    const { elementBelow, state, mouse, ref } = useDrag(x, y, offset.x, offset.y)
+    const { elementBelow, state, mouse, ref } = useDrag(0, 0, 0, 0, graphRef.current)
     const prevState = useRef<DragState>(DragState.IDLE)
 
     const classes = clsx(
-        `absolute rounded-full bg-[${hasConnection ? '#c9bb82' : '#38362f'}] border border-[#f7d964] cursor-crosshair`,
+        `rounded-full bg-[${hasConnection ? '#c9bb82' : '#38362f'}] border border-[#f7d964] cursor-crosshair`,
         className,
     )
 
@@ -63,9 +66,6 @@ const Connector: FC<Props> = ({
         const nodeId = Number(id.split('_')[2])
         const dataId = Number(id.split('_')[4])
 
-        console.log(id)
-        console.log(nodeId, dataId)
-
         return [nodeId, dataId]
     }
 
@@ -78,8 +78,6 @@ const Connector: FC<Props> = ({
                 ...style,
                 width: radius,
                 height: radius,
-                marginLeft: x + offset.x,
-                marginTop: y + offset.y,
             }}
         />
     )
