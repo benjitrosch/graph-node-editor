@@ -7,8 +7,8 @@ import Graph from '../components/Graph'
 const data: NodeMeta[] = [
   {
     id: 0,
-    content: <span>sender</span>,
-    position: { x: 25, y: 50 },
+    title: "test_node_00",
+    position: { x: 40, y: 50 },
     size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.SENDER,
     connections: [
@@ -42,8 +42,8 @@ const data: NodeMeta[] = [
   },
   {
     id: 1,
-    content: <span>receiver</span>,
-    position: { x: 150, y: 150 },
+    title: "test_node_01",
+    position: { x: 380, y: 215 },
     size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.CHANNEL,
     connections: [
@@ -70,8 +70,8 @@ const data: NodeMeta[] = [
   },
   {
     id: 2,
-    content: <span>sender</span>,
-    position: { x: 25, y: 300 },
+    title: "test_node_02",
+    position: { x: 40, y: 350 },
     size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.SENDER,
     connections: [
@@ -105,8 +105,8 @@ const data: NodeMeta[] = [
   },
   {
     id: 3,
-    content: <span>receiver</span>,
-    position: { x: 350, y: 150 },
+    title: "test_node_03",
+    position: { x: 690, y: 250 },
     size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.CHANNEL,
     connections: [
@@ -135,8 +135,8 @@ const data: NodeMeta[] = [
   },
   {
     id: 4,
-    content: <span>receiver</span>,
-    position: { x: 500, y: 150 },
+    title: "test_node_04",
+    position: { x: 1075, y: 75 },
     size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.RECEIVER,
     connections: [],
@@ -150,8 +150,8 @@ const data: NodeMeta[] = [
   },
   {
     id: 5,
-    content: <span>receiver</span>,
-    position: { x: 500, y: 350 },
+    title: "test_node_05",
+    position: { x: 1060, y: 415 },
     size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.RECEIVER,
     connections: [],
@@ -167,15 +167,15 @@ const data: NodeMeta[] = [
 
 const Home: NextPage = () => {
   return (
-    <div className='w-screen h-screen flex flex-col items-center justify-center'>
+    <div className='w-screen h-screen flex flex-col items-center justify-center bg-black text-white'>
       <h1 className='text-lg font-bold'>
         Graph Node Editor
       </h1>
 
       <Graph
         data={data}
-        width={640}
-        height={480}
+        width={1280}
+        height={720}
       />
 
       <p>by Benjamin Trosch</p>

@@ -4,7 +4,8 @@ import { Position, Size } from "./bounds"
 
 export type NodeMeta = {
     id: number
-    content: ReactNode
+    title: string
+    content?: ReactNode
     position: Position
     size: Size
     type: NodeDataConnectionTypes

@@ -1,4 +1,5 @@
-import { FC, useEffect, useRef } from "react"
+import { CSSProperties, FC, useEffect, useRef } from "react"
+import clsx from 'clsx'
 
 import { Position } from "../types/bounds"
 import useDrag, { DragState } from "../hooks/useDrag"
@@ -9,6 +10,9 @@ type Props = {
     position: Position
     offset: Position
     radius: number
+    hasConnection: boolean
+    className?: string,
+    style?: CSSProperties
     setConnectorPoints: (mouse: Position) => void
     deselectConnector: () => void
     connectNodeDataRows: (nodeId: number, dataId: number) => void
@@ -20,6 +24,9 @@ const Connector: FC<Props> = ({
     position,
     offset,
     radius,
+    hasConnection,
+    className,
+    style,
     setConnectorPoints,
     deselectConnector,
     connectNodeDataRows,
@@ -27,6 +34,11 @@ const Connector: FC<Props> = ({
     const { x, y } = position
     const { elementBelow, state, mouse, ref } = useDrag(x, y, offset.x, offset.y)
     const prevState = useRef<DragState>(DragState.IDLE)
+
+    const classes = clsx(
+        `absolute rounded-full bg-[${hasConnection ? '#c9bb82' : '#38362f'}] border border-[#f7d964] cursor-crosshair`,
+        className,
+    )
 
     useEffect(() => {
         if (state === DragState.MOVE) {
@@ -61,8 +73,9 @@ const Connector: FC<Props> = ({
         <div
             id={`connector_node_${nodeId}_data_${dataId}`}
             ref={ref}
-            className="absolute z-30 bg-red-500 rounded-full border border-black cursor-crosshair"
+            className={classes}
             style={{
+                ...style,
                 width: radius,
                 height: radius,
                 marginLeft: x + offset.x,
