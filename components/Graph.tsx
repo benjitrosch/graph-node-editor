@@ -1,13 +1,14 @@
-import { createRef, FC, RefObject, useEffect, useRef, useState, WheelEventHandler } from "react"
+import { createRef, FC, RefObject, useEffect, useRef, useState, WheelEvent } from "react"
 
 import { Position } from "../types/bounds"
 import { NodeDataConnection, NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
 import useDrag from "../hooks/useDrag"
 
-import Node, { NodeRef } from '../components/Node'
 import Background from "./Background"
-import DataRow from "./DataRow"
 import Connector from "./Connector"
+import DataRow from "./DataRow"
+import GraphControls from "./GraphControls"
+import Node, { NodeRef } from '../components/Node'
 
 type Props = {
     data?: NodeMeta[]
@@ -30,6 +31,8 @@ const Graph: FC<Props> = ({
     const [zoom, setZoom] = useState<number>(1)
     const [connectorPoints, setConnectorPoints] = useState<[Position, Position] | null>(null)
 
+    const [locked, toggleLocked] = useState<boolean>(false)
+
     const { ref, state, position } = useDrag(0, 0, offset.x, offset.y)
 
     const svgSizeProps = {
@@ -51,10 +54,13 @@ const Graph: FC<Props> = ({
         }
     }, [nodes.length])
 
-    useEffect(() => {
-        setOffset(position)  
+    useEffect(() => { 
         deselectNode()
-    }, [position, state])
+
+        if (!locked) {
+            setOffset(position) 
+        }
+    }, [locked, position, state])
 
     const selectNode = (id: number) => {
         const index = nodes.findIndex((node) => node.id === id)
@@ -216,7 +222,11 @@ const Graph: FC<Props> = ({
         }, sources[0].value)
     }
 
-    const onScroll = (e: React.WheelEvent<HTMLDivElement>) => {
+    const onScroll = (e: WheelEvent<HTMLDivElement>) => {
+        if (locked) {
+            return
+        }
+
         const delta = Math.min(1, Math.max(-1, e.deltaY)) * 0.03
         const newZoom = Math.min(2, Math.max(0.5, zoom + delta))
 
@@ -246,6 +256,13 @@ const Graph: FC<Props> = ({
                 offset={offset}
                 zoom={zoom}
                 className={`w-full h-full absolute z-10 cursor-move`}
+            />
+
+            <GraphControls
+                locked={locked}
+                zoomIn={() => !locked && setZoom(zoom + 0.1)}
+                zoomOut={() => !locked && setZoom(zoom - 0.1)}
+                toggleLocked={toggleLocked}
             />
 
             {nodes.map((node, i) => {
