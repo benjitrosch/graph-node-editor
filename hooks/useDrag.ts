@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useRef, useState } from "react"
 
 import { Position } from "../types/bounds"
@@ -8,7 +9,7 @@ export enum DragState {
     MOVE    = 2,
 }
 
-export const useDrag = (
+const useDrag = (
     x = 0,
     y = 0,
     offsetX = 0,
@@ -21,6 +22,7 @@ export const useDrag = (
     const [mouse, setMouse] = useState<Position>({ x, y })
     const [position, setPosition] = useState<Position>({ x, y })
     const [delta, setDelta] = useState<Position>({ x, y })
+    const [zoomDelta, setZoomDelta] = useState<number>(0)
     
     const ref = useRef<HTMLDivElement>(null)
 
@@ -78,13 +80,20 @@ export const useDrag = (
         setState(DragState.IDLE)
     }
 
+    const onScroll = (e: WheelEvent) => {
+        setZoomDelta(e.deltaY * 0.001)
+    }
+
     useEffect(() => {
         const element = ref.current
 
         if (element != null) {
             element.addEventListener("mousedown", onMouseDown)
+            element.addEventListener("wheel", onScroll, { passive: true} )
+
             return () => {
                 element.removeEventListener("mousedown", onMouseDown)
+                element.addEventListener("wheel", onScroll, { passive: true} )
             }
         }
     }, [])
@@ -105,7 +114,6 @@ export const useDrag = (
             document.removeEventListener("mousemove", onMouseMove)
             document.removeEventListener("click", onClick)
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [state])
 
     return {
@@ -115,6 +123,7 @@ export const useDrag = (
         position,
         delta,
         elementBelow,
+        zoomDelta,
     }
 }
 

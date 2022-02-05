@@ -4,7 +4,7 @@ import {
     useEffect,
     useState
 } from "react"
-import clsx from 'clsx'
+import clsx from "clsx"
 
 import { NodeDataTypes, NodeMeta } from "../types/nodes"
 
@@ -22,9 +22,7 @@ type Props<T> = {
     updateNodeMeta: (data: NodeMeta) => void
 }
 
-const DataRow = 
-    <T extends NodeDataTypes>
-({
+const DataRow = <T extends NodeDataTypes>({
     id,
     title,
     value,
@@ -69,6 +67,7 @@ const DataRow =
                 updateNodeMeta({...node, data: newDataSet})
             }
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [newValue])
 
     let type = 'text'

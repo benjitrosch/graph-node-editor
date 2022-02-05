@@ -22,6 +22,7 @@ export type NodeRef = {
 type Props = {
     data: NodeMeta
     offset: Position
+    zoom: number,
     isActive: boolean
     children: ReactNode
     className?: string,
@@ -34,6 +35,7 @@ type Props = {
 const Node = forwardRef(({
     data,
     offset,
+    zoom,
     isActive,
     children,
     className,
@@ -113,8 +115,8 @@ const Node = forwardRef(({
             className={classes}
             style={{
                 ...style,
-                marginLeft: elementPosition.x + offset.x,
-                marginTop: elementPosition.y + offset.y,
+                marginLeft: zoom * elementPosition.x + offset.x,
+                marginTop: zoom * elementPosition.y + offset.y,
             }}
         >
             <span className="absolute top-[-18px] right-0 text-[#999999] text-xs">({position.x}, {position.y})</span>
