@@ -4,13 +4,17 @@ import { Position } from "../types/bounds"
 
 type Props = {
     offset: Position,
+    zoom: number,
     className: string
 }
 
 const Background = forwardRef<HTMLDivElement, Props>(({
     offset,
+    zoom,
     className
 }, ref) => {    
+    const size = 32
+
     return (
         <div
             ref={ref}
@@ -27,12 +31,12 @@ const Background = forwardRef<HTMLDivElement, Props>(({
                         id="grid"
                         x={offset.x}
                         y={offset.y}
-                        width="32"
-                        height="32"
+                        width={size * zoom}
+                        height={size * zoom}
                         patternUnits="userSpaceOnUse"
                     >
                         <path
-                            d="M 32 0 L 0 0 0 32"
+                            d={`M ${size * zoom} 0 L 0 0 0 ${size * zoom}`}
                             fill="none"
                             stroke="gray"
                             strokeWidth="0.5"/>

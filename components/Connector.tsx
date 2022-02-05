@@ -13,7 +13,6 @@ import useDrag, { DragState } from "../hooks/useDrag"
 type Props = {
     nodeId: number
     dataId: number
-    radius: number
     graphRef: RefObject<HTMLDivElement>
     hasConnection: boolean
     className?: string,
@@ -26,7 +25,6 @@ type Props = {
 const Connector: FC<Props> = ({
     nodeId,
     dataId,
-    radius,
     graphRef,
     hasConnection,
     className,
@@ -39,7 +37,7 @@ const Connector: FC<Props> = ({
     const prevState = useRef<DragState>(DragState.IDLE)
 
     const classes = clsx(
-        `rounded-full bg-[${hasConnection ? '#c9bb82' : '#38362f'}] border border-[#f7d964] cursor-crosshair`,
+        `w-2 h-2 rounded-full bg-[${hasConnection ? '#c9bb82' : '#38362f'}] border border-[#f7d964] cursor-crosshair`,
         className,
     )
 
@@ -75,9 +73,7 @@ const Connector: FC<Props> = ({
             ref={ref}
             className={classes}
             style={{
-                ...style,
-                width: radius,
-                height: radius,
+                ...style
             }}
         />
     )

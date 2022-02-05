@@ -22,7 +22,6 @@ const useDrag = (
     const [mouse, setMouse] = useState<Position>({ x, y })
     const [position, setPosition] = useState<Position>({ x, y })
     const [delta, setDelta] = useState<Position>({ x, y })
-    const [zoomDelta, setZoomDelta] = useState<number>(0)
     
     const ref = useRef<HTMLDivElement>(null)
 
@@ -80,20 +79,14 @@ const useDrag = (
         setState(DragState.IDLE)
     }
 
-    const onScroll = (e: WheelEvent) => {
-        setZoomDelta(e.deltaY * 0.001)
-    }
-
     useEffect(() => {
         const element = ref.current
 
         if (element != null) {
             element.addEventListener("mousedown", onMouseDown)
-            element.addEventListener("wheel", onScroll, { passive: true} )
 
             return () => {
                 element.removeEventListener("mousedown", onMouseDown)
-                element.addEventListener("wheel", onScroll, { passive: true} )
             }
         }
     }, [])
@@ -123,7 +116,6 @@ const useDrag = (
         position,
         delta,
         elementBelow,
-        zoomDelta,
     }
 }
 

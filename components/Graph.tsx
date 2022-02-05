@@ -1,4 +1,4 @@
-import { createRef, FC, RefObject, useEffect, useRef, useState } from "react"
+import { createRef, FC, RefObject, useEffect, useRef, useState, WheelEventHandler } from "react"
 
 import { Position } from "../types/bounds"
 import { NodeDataConnection, NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
@@ -30,7 +30,7 @@ const Graph: FC<Props> = ({
     const [zoom, setZoom] = useState<number>(1)
     const [connectorPoints, setConnectorPoints] = useState<[Position, Position] | null>(null)
 
-    const { state, position, ref, zoomDelta } = useDrag(0, 0, offset.x, offset.y)
+    const { ref, state, position } = useDrag(0, 0, offset.x, offset.y)
 
     const svgSizeProps = {
         width,
@@ -43,8 +43,7 @@ const Graph: FC<Props> = ({
         strokeWidth: "1"
     }
 
-    const r = 8
-    const buttonSize = 8
+    const buttonSize = 8 * zoom
 
     useEffect(() => {
         for (let i = 0; i < nodes.length; i++) {
@@ -56,11 +55,6 @@ const Graph: FC<Props> = ({
         setOffset(position)  
         deselectNode()
     }, [position, state])
-
-    useEffect(() => {
-        setZoom(Math.max(0, zoom + zoomDelta))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [zoomDelta])
 
     const selectNode = (id: number) => {
         const index = nodes.findIndex((node) => node.id === id)
@@ -222,18 +216,35 @@ const Graph: FC<Props> = ({
         }, sources[0].value)
     }
 
+    const onScroll = (e: React.WheelEvent<HTMLDivElement>) => {
+        const delta = Math.min(1, Math.max(-1, e.deltaY)) * 0.03
+        const newZoom = Math.min(2, Math.max(0.5, zoom + delta))
+
+        setZoom(newZoom)
+
+        const ratio = 1 - newZoom / zoom
+        const newTranslation = {
+            x: offset.x + (e.clientX - offset.x) * ratio,
+            y: offset.y + (e.clientY - offset.y) * ratio
+        }
+
+        setOffset(newTranslation)
+    }
+
     return (
         <div
             ref={graphRef}
             className='relative z-0 overflow-hidden bg-[#121212] border border-white rounded'
             style={{
                 width,
-                height
+                height,
             }}
+            onWheelCapture={(e) => onScroll(e)}
         >
             <Background
                 ref={ref}
                 offset={offset}
+                zoom={zoom}
                 className={`w-full h-full absolute z-10 cursor-move`}
             />
 
@@ -267,7 +278,6 @@ const Graph: FC<Props> = ({
                                 const receiver = (<Connector
                                                     nodeId={node.id}
                                                     dataId={data.id}
-                                                    radius={r}
                                                     graphRef={graphRef}
                                                     hasConnection={nodes.find((n) => n.connections.find((c) => c.to.nodeId === node.id && c.to.dataId === data.id)) != null}
                                                     setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: zoom * x0 + offset.x, y: zoom * y0 + offset.y }, mouse])}
@@ -281,7 +291,6 @@ const Graph: FC<Props> = ({
                                 const sender = (<Connector
                                                     nodeId={node.id}
                                                     dataId={data.id}
-                                                    radius={r}
                                                     graphRef={graphRef}
                                                     hasConnection={n0.connections.find((c) => c.dataId === data.id) != null}
                                                     setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: zoom * x0 + n0.size.width + offset.x, y: zoom * y0 + offset.y }, mouse])}
