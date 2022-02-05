@@ -167,18 +167,14 @@ const data: NodeMeta[] = [
 
 const Home: NextPage = () => {
   return (
-    <div className='w-screen h-screen flex flex-col items-center justify-center bg-black text-white'>
-      <h1 className='text-lg font-bold'>
-        Graph Node Editor
+    <div className='w-screen h-screen flex items-center justify-center bg-black text-white'>
+      <h1 className='h-full w-96 text-lg p-2'>
+        
       </h1>
 
       <Graph
         data={data}
-        width={1280}
-        height={720}
       />
-
-      <p>by Benjamin Trosch</p>
     </div>
   )
 }

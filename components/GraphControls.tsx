@@ -5,7 +5,8 @@ type Props = {
     locked: boolean
     zoomIn: () => void
     zoomOut: () => void
-    toggleLocked: (value: boolean) => void
+    toggleLocked: () => void
+    toggleFullscreen: () => void
 }
 
 const GraphControls: FC<Props> = ({
@@ -13,6 +14,7 @@ const GraphControls: FC<Props> = ({
     zoomIn,
     zoomOut,
     toggleLocked,
+    toggleFullscreen,
 }) => {
     const buttonclasses = clsx(
         "w-8 h-8 bg-[#2e2e2e] hover:bg-[#323232] text-[#999999]"
@@ -38,9 +40,16 @@ const GraphControls: FC<Props> = ({
 
             <button
                 className={buttonclasses}
-                onClick={() => toggleLocked(!locked)}
+                onClick={toggleLocked}
             >
                 {locked ? '🔒' : '🔓'}
+            </button>
+
+            <button
+                className={buttonclasses}
+                onClick={toggleFullscreen}
+            >
+                🖥️
             </button>
         </div>
     )

@@ -1,4 +1,14 @@
-import { createRef, FC, RefObject, useEffect, useRef, useState, WheelEvent } from "react"
+import {
+    createRef,
+    CSSProperties,
+    FC,
+    RefObject,
+    useEffect,
+    useRef,
+    useState, 
+    WheelEvent
+} from "react"
+import clsx from 'clsx'
 
 import { Position } from "../types/bounds"
 import { NodeDataConnection, NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
@@ -14,12 +24,16 @@ type Props = {
     data?: NodeMeta[]
     width?: number
     height?: number
+    className?: string
+    style?: CSSProperties
 }
 
 const Graph: FC<Props> = ({
     data = [],
-    width = 1920,
-    height = 1080,
+    width,
+    height,
+    className,
+    style,
 }) => {
     const graphRef = useRef<HTMLDivElement>(null)
     const nodeRefs = useRef<RefObject<NodeRef>[]>([])
@@ -32,13 +46,14 @@ const Graph: FC<Props> = ({
     const [connectorPoints, setConnectorPoints] = useState<[Position, Position] | null>(null)
 
     const [locked, toggleLocked] = useState<boolean>(false)
+    const [fullscreen, toggleFullscreen] = useState<boolean>(false)
 
     const { ref, state, position } = useDrag(0, 0, offset.x, offset.y)
 
     const svgSizeProps = {
-        width,
-        height,
-        viewBox: `0 0 ${width} ${height}`
+        width: width ?? '100%',
+        height: height ?? '100%',
+        preserveAspectRatio: "slice"
     }
 
     const lineStyle = {
@@ -48,6 +63,11 @@ const Graph: FC<Props> = ({
 
     const buttonSize = 8 * zoom
 
+    const classes = clsx(
+        `${fullscreen ? 'absolute' : 'relative'} z-0 overflow-hidden bg-[#121212] rounded`,
+        className
+    )
+
     useEffect(() => {
         for (let i = 0; i < nodes.length; i++) {
             nodeRefs.current.push(createRef<NodeRef>())
@@ -56,11 +76,30 @@ const Graph: FC<Props> = ({
 
     useEffect(() => { 
         deselectNode()
-
         if (!locked) {
             setOffset(position) 
         }
     }, [locked, position, state])
+
+    useEffect(() => {
+        const graph = graphRef.current
+
+        if (graph != null && document != null) {
+            const openFullscreen = () => {
+                if (graph.requestFullscreen) {
+                    graph.requestFullscreen()
+                }
+            }
+            
+            const closeFullscreen = () => {
+                if (document.fullscreenElement && document.exitFullscreen) {
+                    document.exitFullscreen()
+                }
+            }
+
+            fullscreen ? openFullscreen() : closeFullscreen()
+        }
+    }, [fullscreen])
 
     const selectNode = (id: number) => {
         const index = nodes.findIndex((node) => node.id === id)
@@ -244,10 +283,11 @@ const Graph: FC<Props> = ({
     return (
         <div
             ref={graphRef}
-            className='relative z-0 overflow-hidden bg-[#121212] border border-white rounded'
+            className={classes}
             style={{
-                width,
-                height,
+                ...style,
+                width: width ?? '100%',
+                height: height ?? '100%',
             }}
             onWheelCapture={(e) => onScroll(e)}
         >
@@ -262,7 +302,8 @@ const Graph: FC<Props> = ({
                 locked={locked}
                 zoomIn={() => !locked && setZoom(zoom + 0.1)}
                 zoomOut={() => !locked && setZoom(zoom - 0.1)}
-                toggleLocked={toggleLocked}
+                toggleLocked={() => toggleLocked(!locked)}
+                toggleFullscreen={() => toggleFullscreen(!fullscreen)}
             />
 
             {nodes.map((node, i) => {
