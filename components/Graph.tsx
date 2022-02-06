@@ -101,6 +101,25 @@ const Graph: FC<Props> = ({
         }
     }, [fullscreen])
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Backspace' || e.code === 'Backspace') {
+                console.log(activeNode)
+                if (activeNode >= 0) {
+                    removeNode(activeNode)
+                }
+            }
+        }
+
+        if (document != null) {
+            document.addEventListener("keydown", handleKeyDown)
+
+            return () => {
+                document.removeEventListener('keydown', handleKeyDown)
+            }
+        }
+    }, [activeNode])
+
     const selectNode = (id: number) => {
         const index = nodes.findIndex((node) => node.id === id)
         const node = nodes[index]
@@ -136,6 +155,31 @@ const Graph: FC<Props> = ({
         const index = nodes.findIndex((node) => node.id === id)
         return nodes[index]
     }  
+
+    const addNode = (type: NodeDataConnectionTypes, x: number, y: number) => {
+        setNodes((n) => n.concat({
+            id: n.length,
+            title: `test_node_0${n.length}`,
+            position: { x: x - (graphRef.current?.offsetLeft ?? 0) - offset.x, y: y - (graphRef.current?.offsetTop ?? 0) - offset.y },
+            size: { width: 0, height: 0 },
+            type,
+            connections: [],
+            data: []
+          }
+        ))
+    }
+
+    const removeNode = (id: number) => {
+        const index = nodes.findIndex((node) => node.id === id)
+        const newNodes = [...nodes]
+
+        newNodes.forEach((node) => {
+            node.connections = node.connections.filter((c) => c.to.nodeId !== id)
+        })
+        newNodes.splice(index, 1)
+        
+        setNodes(newNodes)
+    }
     
     const getMidpointBetweenConnectors = (node: NodeMeta, connection: NodeDataConnection) => {
         const n0 = nodeById(node.id)
@@ -297,16 +341,7 @@ const Graph: FC<Props> = ({
             }}
             onDrop={(e) => {
                 const type = e.dataTransfer.getData('nodeConnectionType')
-                setNodes((n) => n.concat({
-                    id: n.length,
-                    title: `test_node_0${n.length}`,
-                    position: { x: e.clientX - (graphRef.current?.offsetLeft ?? 0) - offset.x, y: e.clientY - (graphRef.current?.offsetTop ?? 0) - offset.y },
-                    size: { width: 0, height: 0 },
-                    type: Number(type),
-                    connections: [],
-                    data: []
-                  }
-                ))
+                addNode(Number(type), e.clientX, e.clientY)
             }}
         >
             <Background
