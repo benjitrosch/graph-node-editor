@@ -1,5 +1,6 @@
 import {
     CSSProperties,
+    KeyboardEvent,
     ReactNode,
     useEffect,
     useState
@@ -70,6 +71,16 @@ const DataRow = <T extends NodeDataTypes>({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [newValue])
 
+    const updateDataRowTitle = (value: string) => {
+        const newNode = {...node}
+        const index = newNode.data?.findIndex((d) => d.id === id) ?? -1
+
+        if (newNode.data && index >= 0) {
+            newNode.data[index].title = value
+            updateNodeMeta(newNode)
+        }
+    }
+
     let type = 'text'
     if (typeof value === 'number') {
         type = 'number'
@@ -83,7 +94,15 @@ const DataRow = <T extends NodeDataTypes>({
             <div className="flex items-center gap-2">
                 {receiver}
 
-                <span>{title}</span>
+                <span
+                    onBlur={(e) => updateDataRowTitle(e.currentTarget.innerText)}
+                    onKeyPress={(e) => {
+                    if (e.code === 'Enter') {
+                        e.currentTarget.blur()
+                        updateDataRowTitle(e.currentTarget.innerText)
+                    }
+                    }}
+                    contentEditable>{title}</span>
             </div>
 
             <div className="flex items-center gap-2">

@@ -3,6 +3,7 @@ import {
     CSSProperties,
     forwardRef,
     ReactNode,
+    useCallback,
     useEffect,
     useImperativeHandle,
     useState,
@@ -92,6 +93,19 @@ const Node = forwardRef(({
         })    
     }, [elementPosition, dragRef.current])
 
+    const addDataRow = useCallback(() => {
+        const node = {...data}
+        const dataRows = [...(node.data ?? [])]
+        
+        dataRows.push({
+            id: dataRows.length,
+            title: `data_#${dataRows.length}`,
+            value: 0,
+        })
+        node.data = dataRows
+        updateNodeMeta(node)
+    }, [data, updateNodeMeta])
+
     const nodeTypeToString = (type: NodeDataConnectionTypes) => {
         switch (type) {
             case NodeDataConnectionTypes.RECEIVER:
@@ -115,7 +129,9 @@ const Node = forwardRef(({
                 marginTop: zoom * elementPosition.y + offset.y,
             }}
         >
-            <span className="absolute top-[-18px] right-0 text-[#999999] text-xs">({position.x}, {position.y})</span>
+            <span className="absolute top-[-18px] right-0 text-[#999999] text-xs">
+                ({position.x}, {position.y})
+            </span>
 
             <div className="flex items-center justify-between gap-8 p-2">
                 <div className="flex flex-col">
@@ -137,7 +153,7 @@ const Node = forwardRef(({
                     height="16px"
                     viewBox="0 0 16 16"
                     onClick={() => toggleExpanded(!expanded)}
-                    className="bg-transparent cursor-pointer transition-all"
+                    className="bg-transparent cursor-pointer"
                     style={{
                         transform: `rotate(${expanded ? 90 : 0}deg)`,
                         transformOrigin: 'left',
@@ -154,13 +170,26 @@ const Node = forwardRef(({
 
             {expanded && children}
 
+            {expanded && (
+                <div
+                    className="flex items-center justify-center w-full"
+                >
+                    <button
+                        className="w-8 hover:text-white"
+                        onClick={addDataRow}
+                    >
+                        +
+                    </button>
+                </div>
+            )}
+
             <style jsx>{`
                 .move {
                     box-shadow: 0 0 0 0.1px rgba(0, 0, 0), 0 4px 8px -2px rgba(0, 0, 0, 0.2)
                 }
 
                 .active {
-                    // box-shadow: 0 0 0 1px #999999
+                    box-shadow: 0 0 0 1px #47a5d3
                 }
             `}</style>
         </div>

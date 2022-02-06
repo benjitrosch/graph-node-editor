@@ -3,6 +3,7 @@ import {
     CSSProperties,
     FC,
     RefObject,
+    useCallback,
     useEffect,
     useRef,
     useState, 
@@ -101,25 +102,6 @@ const Graph: FC<Props> = ({
         }
     }, [fullscreen])
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Backspace' || e.code === 'Backspace') {
-                console.log(activeNode)
-                if (activeNode >= 0) {
-                    removeNode(activeNode)
-                }
-            }
-        }
-
-        if (document != null) {
-            document.addEventListener("keydown", handleKeyDown)
-
-            return () => {
-                document.removeEventListener('keydown', handleKeyDown)
-            }
-        }
-    }, [activeNode])
-
     const selectNode = (id: number) => {
         const index = nodes.findIndex((node) => node.id === id)
         const node = nodes[index]
@@ -137,7 +119,7 @@ const Graph: FC<Props> = ({
         setActiveNode(-1)
     }
 
-    const updateNodeMeta = (id: number, data: NodeMeta) => {
+    const updateNodeMeta = useCallback((id: number, data: NodeMeta) => {
         const index = nodes.findIndex((node) => node.id === id)
 
         const newSize = nodeRefs.current[index]?.current?.resize()
@@ -149,7 +131,7 @@ const Graph: FC<Props> = ({
         newNodes.splice(index, 1, data)
 
         setNodes(newNodes)
-    }
+    }, [nodes])
 
     const nodeById = (id: number): NodeMeta => {
         const index = nodes.findIndex((node) => node.id === id)
@@ -177,7 +159,7 @@ const Graph: FC<Props> = ({
             node.connections = node.connections.filter((c) => c.to.nodeId !== id)
         })
         newNodes.splice(index, 1)
-        
+
         setNodes(newNodes)
     }
     
