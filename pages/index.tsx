@@ -3,6 +3,7 @@ import type { NextPage } from 'next'
 import { NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
 
 import Graph from '../components/Graph'
+import NodeBank from '../components/NodeBank'
 
 const data: NodeMeta[] = [
   {
@@ -136,7 +137,7 @@ const data: NodeMeta[] = [
   {
     id: 4,
     title: "test_node_04",
-    position: { x: 1075, y: 75 },
+    position: { x: 960, y: 75 },
     size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.RECEIVER,
     connections: [],
@@ -151,7 +152,7 @@ const data: NodeMeta[] = [
   {
     id: 5,
     title: "test_node_05",
-    position: { x: 1060, y: 415 },
+    position: { x: 960, y: 415 },
     size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.RECEIVER,
     connections: [],
@@ -167,9 +168,9 @@ const data: NodeMeta[] = [
 
 const Home: NextPage = () => {
   return (
-    <div className='w-screen h-screen flex items-center justify-center bg-black text-white'>
+    <div className='w-screen h-screen flex items-center justify-center bg-[black] text-[#999999]'>
       <h1 className='h-full w-96 text-lg p-2'>
-        
+        <NodeBank />
       </h1>
 
       <Graph

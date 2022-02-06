@@ -80,10 +80,6 @@ const Node = forwardRef(({
             selectNode()
             toggleExpanded(true)
         }
-
-        // if (state === DragState.IDLE) {
-        //     deselectNode()
-        // }
     }, [state])
 
     useEffect(() => {

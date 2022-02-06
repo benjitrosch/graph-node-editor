@@ -53,7 +53,7 @@ const Graph: FC<Props> = ({
     const svgSizeProps = {
         width: width ?? '100%',
         height: height ?? '100%',
-        preserveAspectRatio: "slice"
+        // preserveAspectRatio: "slice"
     }
 
     const lineStyle = {
@@ -64,7 +64,7 @@ const Graph: FC<Props> = ({
     const buttonSize = 8 * zoom
 
     const classes = clsx(
-        `${fullscreen ? 'absolute' : 'relative'} z-0 overflow-hidden bg-[#121212] rounded`,
+        `${fullscreen ? 'absolute' : 'relative'} z-0 overflow-hidden bg-[#121212]`,
         className
     )
 
@@ -290,6 +290,24 @@ const Graph: FC<Props> = ({
                 height: height ?? '100%',
             }}
             onWheelCapture={(e) => onScroll(e)}
+            onDragOver={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+                e.dataTransfer.dropEffect = 'move'
+            }}
+            onDrop={(e) => {
+                const type = e.dataTransfer.getData('nodeConnectionType')
+                setNodes((n) => n.concat({
+                    id: n.length,
+                    title: `test_node_0${n.length}`,
+                    position: { x: e.clientX - (graphRef.current?.offsetLeft ?? 0) - offset.x, y: e.clientY - (graphRef.current?.offsetTop ?? 0) - offset.y },
+                    size: { width: 0, height: 0 },
+                    type: Number(type),
+                    connections: [],
+                    data: []
+                  }
+                ))
+            }}
         >
             <Background
                 ref={ref}

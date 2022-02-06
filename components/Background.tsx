@@ -49,8 +49,6 @@ const Background = forwardRef<HTMLDivElement, Props>(({
                     width="100%"
                     height="100%"
                     fill="url(#grid)"
-                    stroke="#000000"
-                    strokeWidth={2}
                 />
             </svg>
         </div>
