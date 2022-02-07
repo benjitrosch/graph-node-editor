@@ -11,15 +11,18 @@ import {
 } from "react"
 import clsx from 'clsx'
 
-import { Position } from "../types/bounds"
 import { NodeDataConnection, NodeDataConnectionTypes, NodeGroupData, NodeMeta } from "../types/nodes"
+import { Position } from "../types/bounds"
+import useContextMenu from "../hooks/useContextMenu"
 import useDrag from "../hooks/useDrag"
 
 import Background from "./Background"
 import Connector from "./Connector"
 import DataRow from "./DataRow"
+import GraphContextMenu from "./GraphContextMenu"
 import GraphControls from "./GraphControls"
 import Node, { NodeRef } from '../components/Node'
+import NodeContextMenu from "./NodeContextMenu"
 
 type Props = {
     data?: NodeMeta[]
@@ -52,11 +55,12 @@ const Graph: FC<Props> = ({
     const [fullscreen, toggleFullscreen] = useState<boolean>(false)
 
     const { ref, state, position } = useDrag(0, 0, offset.x, offset.y)
+    const { anchorPoint: graphAnchorPoint, showMenu: showGraphMenu } = useContextMenu(ref)
+    const { anchorPoint: nodeAnchorPoint, showMenu: showNodeMenu } = useContextMenu(ref)
 
     const svgSizeProps = {
         width: width ?? '100%',
         height: height ?? '100%',
-        // preserveAspectRatio: "slice"
     }
 
     const lineStyle = {
@@ -332,6 +336,15 @@ const Graph: FC<Props> = ({
                 <li>({offset.x.toFixed(0)}, {offset.y.toFixed(0)})</li>
                 <li>* {zoom.toFixed(2)}</li>
             </ul>
+
+            {showGraphMenu && <GraphContextMenu
+                position={graphAnchorPoint}
+            />}
+
+            {showNodeMenu && <NodeContextMenu
+                position={nodeAnchorPoint}
+                groups={groups}
+            />}
 
             <Background
                 ref={ref}
