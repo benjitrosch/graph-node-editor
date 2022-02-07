@@ -13,6 +13,7 @@ import clsx from 'clsx'
 import { Position, Size } from "../types/bounds"
 import { NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
 import useDrag, { DragState } from "../hooks/useDrag"
+import Chevron from "./icons/Chevron"
 
 export type NodeRef = {
     id: number,
@@ -24,6 +25,7 @@ type Props = {
     data: NodeMeta
     offset: Position
     zoom: number,
+    color: string,
     isActive: boolean
     children: ReactNode
     className?: string,
@@ -37,6 +39,7 @@ const Node = forwardRef(({
     data,
     offset,
     zoom,
+    color,
     isActive,
     children,
     className,
@@ -51,7 +54,7 @@ const Node = forwardRef(({
     const [expanded, toggleExpanded] = useState<boolean>(true)
 
     const classes = clsx(
-        "absolute w-fit h-fit bg-[#323232] border-l-4 border-[#47a5d3] rounded select-none",
+        `absolute w-fit h-fit bg-base-400 border-l-4 rounded select-none`,
         state === DragState.MOVE || state === DragState.ACTIVE ? 'cursor-grabbing' : 'cursor-grab',
         className,
         {
@@ -125,18 +128,19 @@ const Node = forwardRef(({
             className={classes}
             style={{
                 ...style,
+                borderLeftColor: color,
                 marginLeft: zoom * elementPosition.x + offset.x,
                 marginTop: zoom * elementPosition.y + offset.y,
             }}
         >
-            <span className="absolute top-[-18px] right-0 text-[#999999] text-xs">
+            <span className="absolute top-[-18px] right-0 text-base-100 text-xs">
                 ({position.x}, {position.y})
             </span>
 
             <div className="flex items-center justify-between gap-8 p-2">
                 <div className="flex flex-col">
                     <span
-                        className="font-light text-xs text-[#999999]"
+                        className="font-base-100 text-xs text-base-100"
                     >
                         {nodeTypeToString(data.type)}
                     </span>
@@ -148,24 +152,12 @@ const Node = forwardRef(({
                     </span>
                 </div>
                 
-                <svg
-                    width="16px"
-                    height="16px"
-                    viewBox="0 0 16 16"
+                <Chevron
                     onClick={() => toggleExpanded(!expanded)}
-                    className="bg-transparent cursor-pointer"
                     style={{
                         transform: `rotate(${expanded ? 90 : 0}deg)`,
-                        transformOrigin: 'left',
                     }}
-                >
-                    <path
-                        fill="none"
-                        stroke="#999999"
-                        strokeWidth="2"
-                        d="M0 0 L8 8 L0 16"
-                    />
-                </svg>
+                />
             </div>
 
             {expanded && children}
@@ -189,7 +181,7 @@ const Node = forwardRef(({
                 }
 
                 .active {
-                    box-shadow: 0 0 0 1px #47a5d3
+                    box-shadow: 0 0 0 1px ${color}
                 }
             `}</style>
         </div>

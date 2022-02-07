@@ -39,12 +39,12 @@ const DataRow = <T extends NodeDataTypes>({
     const [newValue, setNewValue] = useState<T>(value)
 
     const containerClasses = clsx(
-        "relative w-full h-fit flex items-center justify-between gap-8 p-1 bg-[#2e2e2e] border-t-2 border-[#323232] text-[#999999] text-xs",
+        "relative w-full h-fit flex items-center justify-between gap-8 p-1 bg-base-500 text-base-100 text-xs",
         className,
     )
 
     const valueClasses = clsx(
-        "px-1 text-white bg-[#555555] border border-[#777777] rounded",
+        "px-1 text-white bg-base-300 border border-base-200 rounded",
         editable && "hover:border-white",
         valueClassName,
     )
@@ -102,7 +102,12 @@ const DataRow = <T extends NodeDataTypes>({
                         updateDataRowTitle(e.currentTarget.innerText)
                     }
                     }}
-                    contentEditable>{title}</span>
+                    contentEditable
+                    suppressContentEditableWarning
+                    spellCheck={false}
+                >
+                    {title}
+                </span>
             </div>
 
             <div className="flex items-center gap-2">

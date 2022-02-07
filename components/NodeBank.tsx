@@ -11,15 +11,17 @@ type Props = {
 
 const NodeBank: FC<Props> = ({ className, style }) => {
     const classes = clsx(
-        "relative flex flex-col w-full h-full gap-4 p-8 border border-[#777777] select-none",
+        "relative w-full h-auto grid grid-cols-2 gap-2 p-2 bg-base-600 border border-base-200 rounded select-none",
         className
     )
 
     return (
-        <div
+        <fieldset
             className={classes}
             style={{...style}}
         >
+            <legend>NODE BANK</legend>
+            
             <NodeBankItem type={NodeDataConnectionTypes.SENDER}>
                 SENDER
             </NodeBankItem>
@@ -31,7 +33,7 @@ const NodeBank: FC<Props> = ({ className, style }) => {
             <NodeBankItem type={NodeDataConnectionTypes.RECEIVER}>
                 RECEIVER
             </NodeBankItem>
-        </div>
+        </fieldset>
     )
 }
 

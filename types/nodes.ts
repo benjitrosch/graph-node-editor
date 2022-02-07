@@ -11,6 +11,7 @@ export type NodeMeta = {
     type: NodeDataConnectionTypes
     connections: NodeDataConnection[]
     data?: NodeData<NodeDataTypes>[]
+    group?: number
 }
 
 export type NodeData<T> = {
@@ -39,4 +40,10 @@ export type NodeDataRowRef = {
     nodeId: number,
     dataId: number,
     ref: RefObject<HTMLDivElement>
+}
+
+export type NodeGroupData = {
+    id: number
+    title: string
+    color: string
 }

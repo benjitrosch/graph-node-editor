@@ -12,7 +12,7 @@ import {
 import clsx from 'clsx'
 
 import { Position } from "../types/bounds"
-import { NodeDataConnection, NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
+import { NodeDataConnection, NodeDataConnectionTypes, NodeGroupData, NodeMeta } from "../types/nodes"
 import useDrag from "../hooks/useDrag"
 
 import Background from "./Background"
@@ -23,6 +23,7 @@ import Node, { NodeRef } from '../components/Node'
 
 type Props = {
     data?: NodeMeta[]
+    groups?: NodeGroupData[]
     width?: number
     height?: number
     className?: string
@@ -31,6 +32,7 @@ type Props = {
 
 const Graph: FC<Props> = ({
     data = [],
+    groups = [],
     width,
     height,
     className,
@@ -65,7 +67,7 @@ const Graph: FC<Props> = ({
     const buttonSize = 8 * zoom
 
     const classes = clsx(
-        `${fullscreen ? 'absolute' : 'relative'} z-0 overflow-hidden bg-[#121212]`,
+        `${fullscreen ? 'absolute' : 'relative'} z-0 overflow-hidden bg-base-600`,
         className
     )
 
@@ -326,6 +328,11 @@ const Graph: FC<Props> = ({
                 addNode(Number(type), e.clientX, e.clientY)
             }}
         >
+            <ul className="absolute z-50 left-0 top-0 m-1 text-xs text-base-300">
+                <li>({offset.x.toFixed(0)}, {offset.y.toFixed(0)})</li>
+                <li>* {zoom.toFixed(2)}</li>
+            </ul>
+
             <Background
                 ref={ref}
                 offset={offset}
@@ -349,6 +356,7 @@ const Graph: FC<Props> = ({
                             data={node}
                             offset={offset}
                             zoom={zoom}
+                            color={groups.find((group) => group.id === node.group)?.color ?? '#47a5d3'}
                             isActive={node.id === activeNode}
                             selectNode={() => selectNode(node.id)}
                             deselectNode={deselectNode}

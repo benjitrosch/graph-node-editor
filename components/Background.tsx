@@ -36,9 +36,9 @@ const Background = forwardRef<HTMLDivElement, Props>(({
                         patternUnits="userSpaceOnUse"
                     >
                         <path
+                            className="stroke-base-400"
                             d={`M ${size * zoom} 0 L 0 0 0 ${size * zoom}`}
                             fill="none"
-                            stroke="gray"
                             strokeWidth="0.5"/>
                     </pattern>
                 </defs>

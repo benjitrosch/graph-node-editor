@@ -14,7 +14,7 @@ const NodeBankItem: FC<Props> = ({ type, children }) => {
 
     return (
         <div
-            className="flex items-center justify-center p-4 bg-[#323232] border-l-4 border-[#47a5d3] rounded select-none"
+            className="flex items-center justify-center p-2 bg-base-400 rounded cursor-grab"
             onDragStart={onDragStart}
             draggable
         >
