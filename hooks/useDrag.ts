@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Position } from "../types/bounds"
 
@@ -14,6 +13,7 @@ const useDrag = (
     y = 0,
     offsetX = 0,
     offsetY = 0,
+    zoom = 1,
     parent: HTMLElement | null = null,
 ) => {
     const [state, setState] = useState(DragState.IDLE)   
@@ -25,7 +25,7 @@ const useDrag = (
     
     const ref = useRef<HTMLDivElement>(null)
 
-    const onMouseDown = (e: MouseEvent) => {
+    const onMouseDown = useCallback((e: MouseEvent) => {
         e.stopPropagation()
 
         const parentElement = parent ?? ref.current?.offsetParent as HTMLElement
@@ -44,9 +44,9 @@ const useDrag = (
         })
 
         setState(DragState.ACTIVE)
-    }
+    }, [parent])
 
-    const onMouseMove = (e: MouseEvent) => {
+    const onMouseMove = useCallback((e: MouseEvent) => {
         e.stopPropagation()
 
         const parentElement = parent ?? ref.current?.offsetParent as HTMLElement
@@ -65,7 +65,7 @@ const useDrag = (
             x: e.x - delta.x - parentElement.offsetLeft + offsetX,
             y: e.y - delta.y - parentElement.offsetTop + offsetY
         })
-    }
+    }, [delta, offsetX, offsetY, parent, state])
 
     const onMouseUp = (e: MouseEvent) => {
         const elementBelow = e.target as Element
@@ -89,7 +89,7 @@ const useDrag = (
                 element.removeEventListener("mousedown", onMouseDown)
             }
         }
-    }, [])
+    }, [ref])
 
     useEffect(() => {
         if (state === DragState.ACTIVE || state === DragState.MOVE) {

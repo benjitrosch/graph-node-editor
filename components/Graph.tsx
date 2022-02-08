@@ -1,8 +1,6 @@
 import {
-    createRef,
     CSSProperties,
     FC,
-    RefObject,
     useCallback,
     useEffect,
     useRef,
@@ -21,8 +19,7 @@ import Connector from "./Connector"
 import DataRow from "./DataRow"
 import GraphContextMenu from "./GraphContextMenu"
 import GraphControls from "./GraphControls"
-import Node, { NodeRef } from '../components/Node'
-import NodeContextMenu from "./NodeContextMenu"
+import Node from '../components/Node'
 
 type Props = {
     data?: NodeMeta[]
@@ -42,7 +39,6 @@ const Graph: FC<Props> = ({
     style,
 }) => {
     const graphRef = useRef<HTMLDivElement>(null)
-    const nodeRefs = useRef<RefObject<NodeRef>[]>([])
     
     const [nodes, setNodes] = useState<NodeMeta[]>(data)
     const [activeNode, setActiveNode] = useState<number>(-1)
@@ -55,8 +51,7 @@ const Graph: FC<Props> = ({
     const [fullscreen, toggleFullscreen] = useState<boolean>(false)
 
     const { ref, state, position } = useDrag(0, 0, offset.x, offset.y)
-    const { anchorPoint: graphAnchorPoint, showMenu: showGraphMenu } = useContextMenu(ref)
-    const { anchorPoint: nodeAnchorPoint, showMenu: showNodeMenu } = useContextMenu(ref)
+    const { anchorPoint, showMenu: showGraphMenu } = useContextMenu(ref)
 
     const svgSizeProps = {
         width: width ?? '100%',
@@ -74,12 +69,6 @@ const Graph: FC<Props> = ({
         `${fullscreen ? 'absolute' : 'relative'} z-0 overflow-hidden bg-base-600`,
         className
     )
-
-    useEffect(() => {
-        for (let i = 0; i < nodes.length; i++) {
-            nodeRefs.current.push(createRef<NodeRef>())
-        }
-    }, [nodes.length])
 
     useEffect(() => { 
         deselectNode()
@@ -127,11 +116,6 @@ const Graph: FC<Props> = ({
 
     const updateNodeMeta = useCallback((id: number, data: NodeMeta) => {
         const index = nodes.findIndex((node) => node.id === id)
-
-        const newSize = nodeRefs.current[index]?.current?.resize()
-        if (newSize) {
-            data.size = newSize
-        }
         
         const newNodes = [...nodes]
         newNodes.splice(index, 1, data)
@@ -149,10 +133,22 @@ const Graph: FC<Props> = ({
             id: n.length,
             title: `test_node_0${n.length}`,
             position: { x: x - (graphRef.current?.offsetLeft ?? 0) - offset.x, y: y - (graphRef.current?.offsetTop ?? 0) - offset.y },
-            size: { width: 0, height: 0 },
             type,
             connections: [],
             data: []
+          }
+        ))
+    }
+
+    const cloneNode = (node: NodeMeta) => {
+        setNodes((n) => n.concat({
+            id: n.length,
+            title: `test_node_0${n.length}`,
+            position: { x: node.position.x + 100 , y: node.position.y + 100 },
+            type: node.type,
+            group: node.group,
+            connections: [],
+            data: node.data
           }
         ))
     }
@@ -176,10 +172,10 @@ const Graph: FC<Props> = ({
         const p0 = { x: zoom * n0.position.x + offset.x, y: zoom * n0.position.y + offset.y }
         const p1 = { x: zoom * n1.position.x + offset.x, y: zoom * n1.position.y + offset.y }
 
-        const x0 = p0.x + n0.size.width
-        const y0 = p0.y + (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
+        const x0 = p0.x //+ n0.size.width
+        const y0 = p0.y //+ (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
         const x1 = p1.x
-        const y1 = p1.y + (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
+        const y1 = p1.y //+ (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
 
         const cx = (x0 + x1) / 2
         const cy = (y0 + y1) / 2
@@ -194,10 +190,10 @@ const Graph: FC<Props> = ({
         const p0 = { x: zoom * n0.position.x + offset.x, y: zoom * n0.position.y + offset.y }
         const p1 = { x: zoom * n1.position.x + offset.x, y: zoom * n1.position.y + offset.y }
 
-        const x0 = p0.x + n0.size.width
-        const y0 = p0.y + (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
+        const x0 = p0.x //+ n0.size.width
+        const y0 = p0.y //+ (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
         const x1 = p1.x
-        const y1 = p1.y + (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
+        const y1 = p1.y //+ (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
 
         const cx = (x0 + x1) / 2
 
@@ -337,14 +333,15 @@ const Graph: FC<Props> = ({
                 <li>* {zoom.toFixed(2)}</li>
             </ul>
 
-            {showGraphMenu && <GraphContextMenu
-                position={graphAnchorPoint}
-            />}
-
-            {showNodeMenu && <NodeContextMenu
-                position={nodeAnchorPoint}
-                groups={groups}
-            />}
+            {showGraphMenu && (
+                <GraphContextMenu
+                    position={anchorPoint}
+                    addNode={(type: NodeDataConnectionTypes) => addNode(type, anchorPoint.x, anchorPoint.y)}
+                    setZoom={(zoom: number) => setZoom(zoom)}
+                    toggleFullscreen={() => toggleFullscreen(!fullscreen)}
+                    toggleLocked={() => toggleLocked(!locked)}
+                />
+            )}
 
             <Background
                 ref={ref}
@@ -365,15 +362,17 @@ const Graph: FC<Props> = ({
                 return (
                     <div key={node.id}>
                         <Node
-                            ref={nodeRefs.current[i]}
                             data={node}
                             offset={offset}
                             zoom={zoom}
                             color={groups.find((group) => group.id === node.group)?.color ?? '#47a5d3'}
                             isActive={node.id === activeNode}
+                            groups={groups}
                             selectNode={() => selectNode(node.id)}
                             deselectNode={deselectNode}
                             updateNodeMeta={(data: NodeMeta) => updateNodeMeta(node.id, data)}
+                            cloneNode={() => cloneNode(node)}
+                            removeNode={() => removeNode(node.id)}
                             style={{
                                 zIndex: 20 + i,
                                 transform: `scale(${zoom})`
@@ -387,12 +386,13 @@ const Graph: FC<Props> = ({
                                 const n0 = nodeById(node.id)                        
                                 const p0 = { x: n0.position.x, y: n0.position.y }  
                                 const x0 = p0.x
-                                const y0 = p0.y + (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
+                                const y0 = p0.y //+ (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
                                 
                                 const receiver = (<Connector
                                                     nodeId={node.id}
                                                     dataId={data.id}
                                                     graphRef={graphRef}
+                                                    zoom={zoom}
                                                     hasConnection={nodes.find((n) => n.connections.find((c) => c.to.nodeId === node.id && c.to.dataId === data.id)) != null}
                                                     setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: zoom * x0 + offset.x, y: zoom * y0 + offset.y }, mouse])}
                                                     deselectConnector={() => setConnectorPoints(null)}
@@ -406,8 +406,9 @@ const Graph: FC<Props> = ({
                                                     nodeId={node.id}
                                                     dataId={data.id}
                                                     graphRef={graphRef}
+                                                    zoom={zoom}
                                                     hasConnection={n0.connections.find((c) => c.dataId === data.id) != null}
-                                                    setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: zoom * x0 + n0.size.width + offset.x, y: zoom * y0 + offset.y }, mouse])}
+                                                    setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: zoom * x0 + offset.x, y: zoom * y0 + offset.y }, mouse])}
                                                     deselectConnector={() => setConnectorPoints(null)}
                                                     connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, data.id, n1, d1)}
                                                     style={{

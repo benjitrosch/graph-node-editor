@@ -14,6 +14,7 @@ type Props = {
     nodeId: number
     dataId: number
     graphRef: RefObject<HTMLDivElement>
+    zoom: number
     hasConnection: boolean
     className?: string,
     style?: CSSProperties
@@ -26,6 +27,7 @@ const Connector: FC<Props> = ({
     nodeId,
     dataId,
     graphRef,
+    zoom,
     hasConnection,
     className,
     style,
@@ -33,7 +35,7 @@ const Connector: FC<Props> = ({
     deselectConnector,
     connectNodeDataRows,
 }) => {
-    const { elementBelow, state, mouse, ref } = useDrag(0, 0, 0, 0, graphRef.current)
+    const { elementBelow, state, mouse, ref } = useDrag(0, 0, 0, 0, zoom, graphRef.current)
     const prevState = useRef<DragState>(DragState.IDLE)
 
     const classes = clsx(

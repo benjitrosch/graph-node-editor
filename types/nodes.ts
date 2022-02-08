@@ -1,13 +1,12 @@
 import { ReactNode, RefObject } from "react"
 
-import { Position, Size } from "./bounds"
+import { Position } from "./bounds"
 
 export type NodeMeta = {
     id: number
     title: string
     content?: ReactNode
     position: Position
-    size: Size
     type: NodeDataConnectionTypes
     connections: NodeDataConnection[]
     data?: NodeData<NodeDataTypes>[]

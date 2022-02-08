@@ -1,25 +1,21 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
     CSSProperties,
-    forwardRef,
+    FC,
     ReactNode,
     useCallback,
     useEffect,
-    useImperativeHandle,
     useState,
 } from "react"
 import clsx from 'clsx'
 
-import { Position, Size } from "../types/bounds"
-import { NodeDataConnectionTypes, NodeMeta } from "../types/nodes"
+import { NodeDataConnectionTypes, NodeGroupData, NodeMeta } from "../types/nodes"
+import { Position } from "../types/bounds"
+import useContextMenu from "../hooks/useContextMenu"
 import useDrag, { DragState } from "../hooks/useDrag"
-import Chevron from "./icons/Chevron"
 
-export type NodeRef = {
-    id: number,
-    meta: NodeMeta,
-    resize: () => Size
-}
+import Chevron from "./icons/Chevron"
+import NodeContextMenu from "./NodeContextMenu"
 
 type Props = {
     data: NodeMeta
@@ -27,29 +23,36 @@ type Props = {
     zoom: number,
     color: string,
     isActive: boolean
+    groups: NodeGroupData[]
     children: ReactNode
     className?: string,
     style?: CSSProperties
     selectNode: () => void
     deselectNode: () => void
     updateNodeMeta: (data: NodeMeta) => void
+    cloneNode: () => void
+    removeNode: () => void
 }
 
-const Node = forwardRef(({
+const Node: FC<Props> = ({
     data,
     offset,
     zoom,
     color,
     isActive,
+    groups,
     children,
     className,
     style,
     selectNode,
     deselectNode,
     updateNodeMeta,
-}: Props, ref) => {
+    cloneNode,
+    removeNode,
+}) => {
     const { position } = data
-    const { state, position: elementPosition, ref: dragRef } = useDrag(position.x, position.y, -offset.x, -offset.y)
+    const { state, position: elementPosition, ref } = useDrag(position.x, position.y, -offset.x, -offset.y, zoom)
+    const { anchorPoint: nodeAnchorPoint, showMenu: showNodeMenu } = useContextMenu(ref)
 
     const [expanded, toggleExpanded] = useState<boolean>(true)
 
@@ -63,26 +66,10 @@ const Node = forwardRef(({
         }
     )
 
-    useImperativeHandle(ref, () => ({
-        id: data.id,
-        meta: data,
-        resize: () => {
-            const element = dragRef.current
-            if (element != null) {
-                return {
-                    width: element.offsetWidth,
-                    height: element.offsetHeight,
-                }
-            } else {
-                return data.size
-            }
-        }
-    }), [dragRef.current])
-
     useEffect(() => {
         if (state === DragState.ACTIVE) {
             selectNode()
-            toggleExpanded(true)
+            // toggleExpanded(true)
         }
     }, [state])
 
@@ -94,7 +81,7 @@ const Node = forwardRef(({
                 y: elementPosition.y,
             }
         })    
-    }, [elementPosition, dragRef.current])
+    }, [elementPosition, ref.current])
 
     const addDataRow = useCallback(() => {
         const node = {...data}
@@ -123,71 +110,84 @@ const Node = forwardRef(({
     }
 
     return (
-        <div
-            ref={dragRef}
-            className={classes}
-            style={{
-                ...style,
-                borderLeftColor: color,
-                marginLeft: zoom * elementPosition.x + offset.x,
-                marginTop: zoom * elementPosition.y + offset.y,
-            }}
-        >
-            <span className="absolute top-[-18px] right-0 text-base-100 text-xs">
-                ({position.x}, {position.y})
-            </span>
+        <>
+            <div
+                ref={ref}
+                className={classes}
+                style={{
+                    ...style,
+                    borderLeftColor: color,
+                    marginLeft: zoom * position.x + offset.x,
+                    marginTop: zoom * position.y + offset.y,
+                    transformOrigin: '0 0',
+                }}
+            >
+                <span className="absolute top-[-18px] right-0 text-base-100 text-xs">
+                    ({position.x.toFixed(0)}, {position.y.toFixed(0)})
+                </span>
 
-            <div className="flex items-center justify-between gap-8 p-2">
-                <div className="flex flex-col">
-                    <span
-                        className="font-base-100 text-xs text-base-100"
-                    >
-                        {nodeTypeToString(data.type)}
-                    </span>
+                <div className="flex items-center justify-between gap-8 p-2">
+                    <div className="flex flex-col">
+                        <span
+                            className="font-base-100 text-xs text-base-100"
+                        >
+                            {nodeTypeToString(data.type)}
+                        </span>
 
-                    <span
-                        className="font-semibold text-[#f3f3f3]"
-                    >
-                        {data.title}
-                    </span>
+                        <span
+                            className="font-semibold text-[#f3f3f3]"
+                        >
+                            {data.title}
+                        </span>
+                    </div>
+                    
+                    <Chevron
+                        onClick={() => toggleExpanded(!expanded)}
+                        style={{
+                            transform: `rotate(${expanded ? 90 : 0}deg)`,
+                        }}
+                    />
                 </div>
-                
-                <Chevron
-                    onClick={() => toggleExpanded(!expanded)}
-                    style={{
-                        transform: `rotate(${expanded ? 90 : 0}deg)`,
-                    }}
-                />
+
+                {expanded && children}
+
+                {expanded && (
+                    <div
+                        className="flex items-center justify-center w-full"
+                    >
+                        <button
+                            className="w-8 hover:text-white"
+                            onClick={addDataRow}
+                        >
+                            +
+                        </button>
+                    </div>
+                )}
+
+                <style jsx>{`
+                    .move {
+                        box-shadow: 0 0 0 0.1px rgba(0, 0, 0), 0 4px 8px -2px rgba(0, 0, 0, 0.2)
+                    }
+
+                    .active {
+                        box-shadow: 0 0 0 1px ${color}
+                    }
+                `}</style>
             </div>
 
-            {expanded && children}
-
-            {expanded && (
-                <div
-                    className="flex items-center justify-center w-full"
-                >
-                    <button
-                        className="w-8 hover:text-white"
-                        onClick={addDataRow}
-                    >
-                        +
-                    </button>
-                </div>
+            {showNodeMenu && (
+                <NodeContextMenu
+                    position={nodeAnchorPoint}
+                    groups={groups}
+                    expanded={expanded}
+                    toggleExpanded={() => toggleExpanded(!expanded)}
+                    cloneNode={cloneNode}
+                    removeNode={removeNode}
+                    setGroup={(group: number) => updateNodeMeta({ ...data, group })}
+                />
             )}
-
-            <style jsx>{`
-                .move {
-                    box-shadow: 0 0 0 0.1px rgba(0, 0, 0), 0 4px 8px -2px rgba(0, 0, 0, 0.2)
-                }
-
-                .active {
-                    box-shadow: 0 0 0 1px ${color}
-                }
-            `}</style>
-        </div>
+        </>
     )
-})
-
-Node.displayName = "Node"
+}
 
 export default Node

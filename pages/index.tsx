@@ -11,7 +11,6 @@ const data: NodeMeta[] = [
     id: 0,
     title: "test_node_00",
     position: { x: 40, y: 50 },
-    size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.SENDER,
     connections: [
       {
@@ -47,7 +46,6 @@ const data: NodeMeta[] = [
     id: 1,
     title: "test_node_01",
     position: { x: 380, y: 215 },
-    size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.CHANNEL,
     connections: [
       {
@@ -76,7 +74,6 @@ const data: NodeMeta[] = [
     id: 2,
     title: "test_node_02",
     position: { x: 40, y: 350 },
-    size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.SENDER,
     connections: [
       {
@@ -112,7 +109,6 @@ const data: NodeMeta[] = [
     id: 3,
     title: "test_node_03",
     position: { x: 690, y: 250 },
-    size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.CHANNEL,
     connections: [
       {
@@ -143,7 +139,6 @@ const data: NodeMeta[] = [
     id: 4,
     title: "test_node_04",
     position: { x: 960, y: 75 },
-    size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.RECEIVER,
     connections: [],
     data: [
@@ -159,7 +154,6 @@ const data: NodeMeta[] = [
     id: 5,
     title: "test_node_05",
     position: { x: 960, y: 415 },
-    size: { width: 0, height: 0 },
     type: NodeDataConnectionTypes.RECEIVER,
     connections: [],
     data: [

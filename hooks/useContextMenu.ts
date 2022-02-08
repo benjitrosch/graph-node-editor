@@ -14,7 +14,15 @@ const useContextMenu = (ref: RefObject<HTMLElement>) => {
     const onContextMenu = useCallback((e: MouseEvent) => {
         e.preventDefault()
 
-        setAnchorPoint({ x: e.offsetX, y: e.offsetY })
+        const element = ref.current
+        const parentElement = ref.current?.offsetParent as HTMLElement
+        if (element && parentElement) {
+            setAnchorPoint({
+                x: e.pageX - parentElement.offsetLeft,
+                y: e.pageY - parentElement.offsetTop
+            })
+        }
+
         toggleShowMenu(true)
     }, [toggleShowMenu, setAnchorPoint])
 
