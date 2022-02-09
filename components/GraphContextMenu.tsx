@@ -1,5 +1,6 @@
 import { FC, ReactNode } from "react"
 import {
+    PlusCircleIcon,
     ZoomInIcon,
     ArrowsExpandIcon,
     LockClosedIcon,
@@ -35,6 +36,7 @@ const GraphContextMenu: FC<Props> = ({
             }}
         >
             <GraphContextMenuItem
+                icon={<PlusCircleIcon />}
                 submenu={[
                     <GraphContextMenuItem
                         key='graph_contextmenu_addnode_sender'

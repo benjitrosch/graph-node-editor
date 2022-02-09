@@ -47,6 +47,8 @@ const NodeContextMenu: FC<Props> = ({
                 {expanded ? 'Collapse' : 'Expand'}
             </NodeContextMenuItem>
 
+            <hr className="border-base-300" />
+
             <NodeContextMenuItem
                 icon={<FolderIcon />}
                 submenu={groups.map((group) => {
@@ -71,8 +73,6 @@ const NodeContextMenu: FC<Props> = ({
             >
                 Group
             </NodeContextMenuItem>
-
-            <hr className="border-base-300" />
 
             <NodeContextMenuItem
                 icon={<ClipboardIcon />}
