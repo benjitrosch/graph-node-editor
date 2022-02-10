@@ -69,7 +69,7 @@ const Connector = forwardRef<ConnectorRef, Props>(({
         }
     }, [dragRef])
 
-    useImperativeHandle(ref, () => ({
+    useImperativeHandle(ref, (): ConnectorRef => ({
         type,
         nodeId: nodeId,
         dataId: dataId,

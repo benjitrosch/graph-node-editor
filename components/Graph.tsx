@@ -11,7 +11,7 @@ import {
 } from "react"
 import clsx from 'clsx'
 
-import { NodeDataConnection, NodeDataConnectionTypes, NodeGroupData, NodeMeta } from "../types/nodes"
+import { NodeDataConnection, NodeDataConnectionTypes, NodeDataConnectorType, NodeGroupData, NodeMeta } from "../types/nodes"
 import { Position } from "../types/bounds"
 import useContextMenu from "../hooks/useContextMenu"
 import useDrag from "../hooks/useDrag"
@@ -42,7 +42,12 @@ const Graph: FC<Props> = ({
     style,
 }) => {
     const graphRef = useRef<HTMLDivElement>(null)
-    const connectorRefs = useRef<RefObject<ConnectorRef>[]>([])
+    const connectorRefs = useRef<{
+        type: NodeDataConnectorType,
+        nodeId: number,
+        dataId: number,
+        ref: RefObject<ConnectorRef>
+    }[]>([])
 
     const [nodes, setNodes] = useState<NodeMeta[]>(data)
     const [activeNode, setActiveNode] = useState<number>(-1)
@@ -364,13 +369,30 @@ const Graph: FC<Props> = ({
                                 const x0 = p0.x
                                 const y0 = p0.y //+ (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
                                 
-                                const receiverRef = createRef<ConnectorRef>()
-                                const senderRef = createRef<ConnectorRef>()
-                                connectorRefs.current.push(receiverRef)
-                                connectorRefs.current.push(senderRef)
+                                let receiverRef = connectorRefs.current.find((c) => c.type === 'in' && c.nodeId === node.id && c.dataId === data.id)
+                                if (!receiverRef) {
+                                    receiverRef = {
+                                        type: 'in',
+                                        nodeId: node.id,
+                                        dataId: data.id,
+                                        ref: createRef<ConnectorRef>()
+                                    }
+                                    connectorRefs.current.push(receiverRef)
+                                }
+
+                                let senderRef = connectorRefs.current.find((c) => c.type === 'out' && c.nodeId === node.id && c.dataId === data.id)
+                                if (!senderRef) {
+                                    senderRef = {
+                                        type: 'out',
+                                        nodeId: node.id,
+                                        dataId: data.id,
+                                        ref: createRef<ConnectorRef>()
+                                    }
+                                    connectorRefs.current.push(senderRef)
+                                }
 
                                 const receiver = (<Connector
-                                                    ref={receiverRef}
+                                                    ref={receiverRef.ref}
                                                     type="in"
                                                     nodeId={node.id}
                                                     dataId={data.id}
@@ -386,7 +408,7 @@ const Graph: FC<Props> = ({
                                                 />)
 
                                 const sender = (<Connector
-                                                    ref={senderRef}
+                                                    ref={senderRef.ref}
                                                     type="out"
                                                     nodeId={node.id}
                                                     dataId={data.id}
@@ -430,11 +452,11 @@ const Graph: FC<Props> = ({
                                 style.strokeWidth = "2"
                             }
 
-                            const sender = connectorRefs.current.find((c) => c.current?.type === 'out' && c.current?.nodeId === node.id && c.current.dataId === connection.dataId)
-                            const receiver = connectorRefs.current.find((c) => c.current?.type === 'in' && c.current?.nodeId === connection.to.nodeId && c.current.dataId === connection.to.dataId)
+                            const sender = connectorRefs.current.find((c) => c.type === 'out' && c.nodeId === node.id && c.dataId === connection.dataId)
+                            const receiver = connectorRefs.current.find((c) => c.type === 'in' && c.nodeId === connection.to.nodeId && c.dataId === connection.to.dataId)
 
-                            const senderPosition = sender?.current?.getPosition() ?? { x: 0, y: 0 } 
-                            const receiverPosition = receiver?.current?.getPosition() ?? { x: 0, y: 0 } 
+                            const senderPosition = sender?.ref.current?.getPosition() ?? { x: 0, y: 0 } 
+                            const receiverPosition = receiver?.ref.current?.getPosition() ?? { x: 0, y: 0 } 
 
                             const n0 = nodeById(node.id)
                             const n1 = nodeById(connection.to.nodeId)
