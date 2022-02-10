@@ -1,24 +1,22 @@
 import { CSSProperties, FC, useState } from "react"
 import clsx from 'clsx'
 
-import { NodeGroupData, NodeMeta } from "../types/nodes"
+import { NodeGroupData } from "../types/nodes"
+import { useGraphContext } from "../context/GraphContext"
 
 import NodeGroup from "./NodeGroup"
 
 type Props = {
-    data: NodeGroupData[]
-    nodes: NodeMeta[]
     className?: string
     style?: CSSProperties
 }
 
 const NodeGroupList: FC<Props> = ({
-    data,
-    nodes,
     className,
     style
 }) => {
-    const [groups, setGroups] = useState<NodeGroupData[]>(data)
+    const { groups, nodes, setGroups } = useGraphContext()
+
     const [selectedGroups, setSelectedGroups] = useState<number[]>([])
 
     const classes = clsx(
@@ -42,7 +40,7 @@ const NodeGroupList: FC<Props> = ({
             color: '#47a5d3',
         }
 
-        setGroups((g) => g.concat(group))
+        setGroups(groups.concat(group))
     }
 
     return (

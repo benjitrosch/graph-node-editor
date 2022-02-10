@@ -51,7 +51,7 @@ const Connector = forwardRef<ConnectorRef, Props>(({
     const prevState = useRef<DragState>(DragState.IDLE)
 
     const classes = clsx(
-        `w-2 h-2 rounded-full bg-[${hasConnection ? '#c9bb82' : '#38362f'}] border border-[#f7d964] cursor-crosshair`,
+        `w-2 h-2 rounded-full border border-[#f7d964] cursor-crosshair`,
         className,
     )
 
@@ -108,7 +108,8 @@ const Connector = forwardRef<ConnectorRef, Props>(({
             ref={dragRef}
             className={classes}
             style={{
-                ...style
+                ...style,
+                backgroundColor: hasConnection ? '#c9bb82' : '#38362f',
             }}
         />
     )

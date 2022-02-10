@@ -11,10 +11,12 @@ import {
 } from "react"
 import clsx from 'clsx'
 
+import { drawBezierPath, drawSteppedPath } from "../utils/paths"
 import { NodeDataConnection, NodeDataConnectionTypes, NodeDataConnectorType, NodeGroupData, NodeMeta } from "../types/nodes"
 import { Position } from "../types/bounds"
 import useContextMenu from "../hooks/useContextMenu"
 import useDrag from "../hooks/useDrag"
+import { useGraphContext } from "../context/GraphContext"
 
 import Background from "./Background"
 import Connector, { ConnectorRef } from "./Connector"
@@ -22,11 +24,8 @@ import DataRow from "./DataRow"
 import GraphContextMenu from "./GraphContextMenu"
 import GraphControls from "./GraphControls"
 import Node from '../components/Node'
-import { drawBezierPath, drawSteppedPath } from "../utils/paths"
 
 type Props = {
-    data?: NodeMeta[]
-    groups?: NodeGroupData[]
     width?: number
     height?: number
     className?: string
@@ -34,8 +33,6 @@ type Props = {
 }
 
 const Graph: FC<Props> = ({
-    data = [],
-    groups = [],
     width,
     height,
     className,
@@ -49,7 +46,8 @@ const Graph: FC<Props> = ({
         ref: RefObject<ConnectorRef>
     }[]>([])
 
-    const [nodes, setNodes] = useState<NodeMeta[]>(data)
+    const { nodes, groups, setNodes } = useGraphContext()
+
     const [activeNode, setActiveNode] = useState<number>(-1)
     
     const [offset, setOffset] = useState<Position>({ x: 0, y: 0 })
@@ -131,7 +129,7 @@ const Graph: FC<Props> = ({
         newNodes.splice(index, 1, data)
 
         setNodes(newNodes)
-    }, [nodes])
+    }, [nodes, setNodes])
 
     const nodeById = (id: number): NodeMeta => {
         const index = nodes.findIndex((node) => node.id === id)
@@ -139,9 +137,9 @@ const Graph: FC<Props> = ({
     }  
 
     const addNode = (type: NodeDataConnectionTypes, x: number, y: number) => {
-        setNodes((n) => n.concat({
-            id: n.length,
-            title: `test_node_0${n.length}`,
+        setNodes(nodes.concat({
+            id: nodes.length,
+            title: `test_node_0${nodes.length}`,
             position: { x: x - (graphRef.current?.offsetLeft ?? 0) - offset.x, y: y - (graphRef.current?.offsetTop ?? 0) - offset.y },
             type,
             connections: [],
@@ -151,9 +149,9 @@ const Graph: FC<Props> = ({
     }
 
     const cloneNode = (node: NodeMeta) => {
-        setNodes((n) => n.concat({
-            id: n.length,
-            title: `test_node_0${n.length}`,
+        setNodes(nodes.concat({
+            id: nodes.length,
+            title: `test_node_0${nodes.length}`,
             position: { x: node.position.x + 100 , y: node.position.y + 100 },
             type: node.type,
             group: node.group,
