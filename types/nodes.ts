@@ -27,6 +27,8 @@ export enum NodeDataConnectionTypes {
     CHANNEL     = ~(~0 << 2)
 }
 
+export type NodeDataConnectorType = 'in' | 'out'
+
 export type NodeDataConnection = {
     dataId: number,
     to: {

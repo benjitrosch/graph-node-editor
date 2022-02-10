@@ -188,10 +188,10 @@ const groups: NodeGroupData[] = [
 const Home: NextPage = () => {
   return (
     <div className="w-full h-screen flex flex-col">
-      <div className='flex items-center justify-between w-full p-2 bg-black text-white'>
-        <h1>Shader Node Editor v.0.1.0</h1>
+      {/* <div className='flex items-center justify-between w-full p-2 bg-black text-white'>
+        <h1>Node Editor v.0.1.0</h1>
         <span>by Benjamin Trosch</span>
-      </div>
+      </div> */}
 
       <div className='w-full h-full flex items-center justify-center bg-black text-base-100'>
         <div className='flex flex-col gap-4 h-full w-96 text-lg p-2'>

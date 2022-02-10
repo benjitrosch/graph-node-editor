@@ -1,6 +1,8 @@
 import {
+    createRef,
     CSSProperties,
     FC,
+    RefObject,
     useCallback,
     useEffect,
     useRef,
@@ -15,11 +17,12 @@ import useContextMenu from "../hooks/useContextMenu"
 import useDrag from "../hooks/useDrag"
 
 import Background from "./Background"
-import Connector from "./Connector"
+import Connector, { ConnectorRef } from "./Connector"
 import DataRow from "./DataRow"
 import GraphContextMenu from "./GraphContextMenu"
 import GraphControls from "./GraphControls"
 import Node from '../components/Node'
+import { drawBezierPath, drawSteppedPath } from "../utils/paths"
 
 type Props = {
     data?: NodeMeta[]
@@ -39,7 +42,8 @@ const Graph: FC<Props> = ({
     style,
 }) => {
     const graphRef = useRef<HTMLDivElement>(null)
-    
+    const connectorRefs = useRef<RefObject<ConnectorRef>[]>([])
+
     const [nodes, setNodes] = useState<NodeMeta[]>(data)
     const [activeNode, setActiveNode] = useState<number>(-1)
     
@@ -72,6 +76,7 @@ const Graph: FC<Props> = ({
 
     useEffect(() => { 
         deselectNode()
+        
         if (!locked) {
             setOffset(position) 
         }
@@ -183,39 +188,10 @@ const Graph: FC<Props> = ({
         return { x: cx, y: cy }
     }
 
-    const drawConnectorPath = (node: NodeMeta, connection: NodeDataConnection) => {
-        const n0 = nodeById(node.id)
-        const n1 = nodeById(connection.to.nodeId)
-
-        const p0 = { x: zoom * n0.position.x + offset.x, y: zoom * n0.position.y + offset.y }
-        const p1 = { x: zoom * n1.position.x + offset.x, y: zoom * n1.position.y + offset.y }
-
-        const x0 = p0.x //+ n0.size.width
-        const y0 = p0.y //+ (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
-        const x1 = p1.x
-        const y1 = p1.y //+ (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
-
-        const cx = (x0 + x1) / 2
-
-        return `M${x0},${y0}
-                C${cx},${y0} ${cx},${y1}
-                ${x1},${y1}`
-    }
-
     const drawConnectorToMousePath = () => {
         if (connectorPoints) {
             const [p0, p1] = connectorPoints
-
-            const x0 = p0.x
-            const x1 = p1.x
-            const y0 = p0.y
-            const y1 = p1.y
-
-            const cx = (x0 + x1) / 2
-
-            return `M${x0},${y0}
-                    C${cx},${y0} ${cx},${y1}
-                    ${x1},${y1}`
+            return drawBezierPath(p0, p1)
         }
         
         return ''
@@ -388,13 +364,20 @@ const Graph: FC<Props> = ({
                                 const x0 = p0.x
                                 const y0 = p0.y //+ (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
                                 
+                                const receiverRef = createRef<ConnectorRef>()
+                                const senderRef = createRef<ConnectorRef>()
+                                connectorRefs.current.push(receiverRef)
+                                connectorRefs.current.push(senderRef)
+
                                 const receiver = (<Connector
+                                                    ref={receiverRef}
+                                                    type="in"
                                                     nodeId={node.id}
                                                     dataId={data.id}
                                                     graphRef={graphRef}
                                                     zoom={zoom}
                                                     hasConnection={nodes.find((n) => n.connections.find((c) => c.to.nodeId === node.id && c.to.dataId === data.id)) != null}
-                                                    setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: zoom * x0 + offset.x, y: zoom * y0 + offset.y }, mouse])}
+                                                    setConnectorPoints={(position: Position, mouse: Position) => setConnectorPoints([{ x: zoom * (x0 + position.x + 8) + offset.x, y: zoom * (y0 + position.y + 22) + offset.y }, mouse])}
                                                     deselectConnector={() => setConnectorPoints(null)}
                                                     connectNodeDataRows={(n0: number, d0: number) => connectNodeDataRows(n0, d0, node.id, data.id)}
                                                     style={{
@@ -403,12 +386,14 @@ const Graph: FC<Props> = ({
                                                 />)
 
                                 const sender = (<Connector
+                                                    ref={senderRef}
+                                                    type="out"
                                                     nodeId={node.id}
                                                     dataId={data.id}
                                                     graphRef={graphRef}
                                                     zoom={zoom}
                                                     hasConnection={n0.connections.find((c) => c.dataId === data.id) != null}
-                                                    setConnectorPoints={(mouse: Position) => setConnectorPoints([{ x: zoom * x0 + offset.x, y: zoom * y0 + offset.y }, mouse])}
+                                                    setConnectorPoints={(position: Position, mouse: Position) => setConnectorPoints([{ x: zoom * (x0 + position.x + 8) + offset.x, y: zoom * (y0 + position.y + 22) + offset.y }, mouse])}
                                                     deselectConnector={() => setConnectorPoints(null)}
                                                     connectNodeDataRows={(n1: number, d1: number) => connectNodeDataRows(node.id, data.id, n1, d1)}
                                                     style={{
@@ -433,7 +418,7 @@ const Graph: FC<Props> = ({
                         </Node>
 
                         {node.connections.map((connection, i) => {
-                            const { x, y } = getMidpointBetweenConnectors(node, connection)
+                            // const { x, y } = getMidpointBetweenConnectors(node, connection)
 
                             const style = {...lineStyle}
                             if (node.id === activeNode) {
@@ -444,6 +429,18 @@ const Graph: FC<Props> = ({
                                 style.stroke = "#aa44dd"
                                 style.strokeWidth = "2"
                             }
+
+                            const sender = connectorRefs.current.find((c) => c.current?.type === 'out' && c.current?.nodeId === node.id && c.current.dataId === connection.dataId)
+                            const receiver = connectorRefs.current.find((c) => c.current?.type === 'in' && c.current?.nodeId === connection.to.nodeId && c.current.dataId === connection.to.dataId)
+
+                            const senderPosition = sender?.current?.getPosition() ?? { x: 0, y: 0 } 
+                            const receiverPosition = receiver?.current?.getPosition() ?? { x: 0, y: 0 } 
+
+                            const n0 = nodeById(node.id)
+                            const n1 = nodeById(connection.to.nodeId)
+                    
+                            const p0 = { x: zoom * (n0.position.x + senderPosition.x + 8) + offset.x, y: zoom * (n0.position.y + senderPosition.y + 22) + offset.y }
+                            const p1 = { x: zoom * (n1.position.x + receiverPosition.x + 8) + offset.x, y: zoom * (n1.position.y + receiverPosition.y + 22) + offset.y }                    
                             
                             return (
                                 <div
@@ -457,12 +454,12 @@ const Graph: FC<Props> = ({
                                         {...svgSizeProps}
                                     >
                                         <path
-                                            className='path'
-                                            d={drawConnectorPath(node, connection)}
+                                            // className='path'
+                                            d={drawSteppedPath(p0, p1)}
                                             fill="none"
                                             {...style}
                                         />
-                                        <g
+                                        {/* <g
                                             transform={`translate(${x},${y})`}
                                             stroke="#ba0d34"
                                             strokeWidth="2"
@@ -485,7 +482,7 @@ const Graph: FC<Props> = ({
                                                 d={`M${buttonSize * 0.5} ${-buttonSize * 0.5}
                                                     L${-buttonSize * 0.5} ${buttonSize * 0.5}`}
                                             />
-                                        </g>
+                                        </g> */}
                                     </svg>
                                 </div>
                             )
@@ -499,6 +496,7 @@ const Graph: FC<Props> = ({
                 {...svgSizeProps}
             >
                 <path
+                    className='path'
                     d={drawConnectorToMousePath()}
                     fill="none"
                     {...lineStyle}

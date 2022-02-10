@@ -1,16 +1,27 @@
 import {
     CSSProperties,
-    FC,
+    forwardRef,
     RefObject,
+    useCallback,
     useEffect,
+    useImperativeHandle,
     useRef
 } from "react"
 import clsx from 'clsx'
 
+import { NodeDataConnectorType } from "../types/nodes"
 import { Position } from "../types/bounds"
 import useDrag, { DragState } from "../hooks/useDrag"
 
+export type ConnectorRef = {
+    type: NodeDataConnectorType
+    nodeId: number
+    dataId: number
+    getPosition: () => Position
+}
+
 type Props = {
+    type: NodeDataConnectorType
     nodeId: number
     dataId: number
     graphRef: RefObject<HTMLDivElement>
@@ -18,12 +29,13 @@ type Props = {
     hasConnection: boolean
     className?: string,
     style?: CSSProperties
-    setConnectorPoints: (mouse: Position) => void
+    setConnectorPoints: (position: Position, mouse: Position) => void
     deselectConnector: () => void
     connectNodeDataRows: (nodeId: number, dataId: number) => void
 }
 
-const Connector: FC<Props> = ({
+const Connector = forwardRef<ConnectorRef, Props>(({
+    type,
     nodeId,
     dataId,
     graphRef,
@@ -34,8 +46,8 @@ const Connector: FC<Props> = ({
     setConnectorPoints,
     deselectConnector,
     connectNodeDataRows,
-}) => {
-    const { elementBelow, state, mouse, ref } = useDrag(0, 0, 0, 0, zoom, graphRef.current)
+}, ref) => {
+    const { elementBelow, state, mouse, ref: dragRef } = useDrag(0, 0, 0, 0, zoom, graphRef.current)
     const prevState = useRef<DragState>(DragState.IDLE)
 
     const classes = clsx(
@@ -43,9 +55,30 @@ const Connector: FC<Props> = ({
         className,
     )
 
+    const getPosition = useCallback(() => {
+        const element = dragRef.current
+        const parent = dragRef.current?.offsetParent as HTMLElement
+
+        if (element != null && parent != null) {
+            return {
+                x: parent.offsetLeft + element.offsetLeft,
+                y: parent.offsetTop - element.offsetTop,
+            }
+        } else {
+            return { x: 0, y: 0 }
+        }
+    }, [dragRef])
+
+    useImperativeHandle(ref, () => ({
+        type,
+        nodeId: nodeId,
+        dataId: dataId,
+        getPosition,
+    }), [dataId, getPosition, nodeId, type])
+
     useEffect(() => {
         if (state === DragState.MOVE) {
-            setConnectorPoints(mouse)
+            setConnectorPoints(getPosition(), mouse)
         }
 
         if (state === DragState.IDLE) {
@@ -72,13 +105,15 @@ const Connector: FC<Props> = ({
     return (
         <div
             id={`connector_node_${nodeId}_data_${dataId}`}
-            ref={ref}
+            ref={dragRef}
             className={classes}
             style={{
                 ...style
             }}
         />
     )
-}
+})
+
+Connector.displayName = 'Connector'
 
 export default Connector
