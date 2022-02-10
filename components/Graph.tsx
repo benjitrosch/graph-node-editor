@@ -468,6 +468,8 @@ const Graph: FC<Props> = ({
                             const p0 = { x: zoom * (n0.position.x + senderPosition.x + 8) + offset.x, y: zoom * (n0.position.y + senderPosition.y + 22) + offset.y }
                             const p1 = { x: zoom * (n1.position.x + receiverPosition.x + 8) + offset.x, y: zoom * (n1.position.y + receiverPosition.y + 22) + offset.y }                    
                             
+                            const path = drawSteppedPath(p0, p1)
+
                             return (
                                 <div
                                     key={`node_${node.id}_connection_${i}_${i}`}
@@ -479,38 +481,20 @@ const Graph: FC<Props> = ({
                                         }}
                                         {...svgSizeProps}
                                     >
-                                        <path
-                                            // className='path'
-                                            className="pointer-events-auto"
-                                            d={drawSteppedPath(p0, p1)}
-                                            fill="none"
-                                            onClick={() => disconnectNodeDataRows(node.id, connection.dataId, connection.to.nodeId, connection.to.dataId)}
-                                            {...style}
-                                        />
-                                        {/* <g
-                                            transform={`translate(${x},${y})`}
-                                            stroke="#ba0d34"
-                                            strokeWidth="2"
-                                        >
-                                            <circle
-                                                className="cursor-pointer pointer-events-auto"
-                                                x={-buttonSize * 0.5}
-                                                y={-buttonSize * 0.5}
-                                                r={buttonSize * 0.8}
-                                                fill="transparent"
+                                        <g>
+                                            <path
+                                                d={path}
+                                                fill="none"
+                                                {...style}
+                                            />
+                                            <path
+                                                className="pointer-events-auto stroke-transparent hover:stroke-[#cf0e324f]"
+                                                d={path}
+                                                fill="none"
                                                 onClick={() => disconnectNodeDataRows(node.id, connection.dataId, connection.to.nodeId, connection.to.dataId)}
+                                                strokeWidth={8}
                                             />
-                                            <path
-                                                fill="none"
-                                                d={`M${-buttonSize * 0.5} ${-buttonSize * 0.5}
-                                                    L${buttonSize * 0.5} ${buttonSize * 0.5}`}
-                                            />
-                                            <path
-                                                fill="none"
-                                                d={`M${buttonSize * 0.5} ${-buttonSize * 0.5}
-                                                    L${-buttonSize * 0.5} ${buttonSize * 0.5}`}
-                                            />
-                                        </g> */}
+                                        </g>
                                     </svg>
                                 </div>
                             )
