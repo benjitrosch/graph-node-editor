@@ -46,12 +46,18 @@ const Graph: FC<Props> = ({
         ref: RefObject<ConnectorRef>
     }[]>([])
 
-    const { nodes, groups, setNodes } = useGraphContext()
+    const {
+        nodes,
+        groups,
+        zoom,
+        offset,
+        setNodes,
+        setZoom,
+        setOffset
+    } = useGraphContext()
 
     const [activeNode, setActiveNode] = useState<number>(-1)
     
-    const [offset, setOffset] = useState<Position>({ x: 0, y: 0 })
-    const [zoom, setZoom] = useState<number>(1)
     const [connectorPoints, setConnectorPoints] = useState<[Position, Position] | null>(null)
 
     const [locked, toggleLocked] = useState<boolean>(false)
@@ -83,7 +89,7 @@ const Graph: FC<Props> = ({
         if (!locked) {
             setOffset(position) 
         }
-    }, [locked, position, state])
+    }, [locked, position, setOffset, state])
 
     useEffect(() => {
         const graph = graphRef.current
@@ -475,8 +481,10 @@ const Graph: FC<Props> = ({
                                     >
                                         <path
                                             // className='path'
+                                            className="pointer-events-auto"
                                             d={drawSteppedPath(p0, p1)}
                                             fill="none"
+                                            onClick={() => disconnectNodeDataRows(node.id, connection.dataId, connection.to.nodeId, connection.to.dataId)}
                                             {...style}
                                         />
                                         {/* <g

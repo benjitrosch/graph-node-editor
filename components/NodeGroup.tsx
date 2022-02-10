@@ -1,5 +1,5 @@
 import { FC, useEffect, useState } from "react"
-import { SketchPicker, ColorResult } from 'react-color'
+import { SketchPicker } from 'react-color'
 
 import { Position } from "../types/bounds"
 import { NodeGroupData } from "../types/nodes"
@@ -17,6 +17,7 @@ type Props = {
     selected: boolean
     updateGroupData: (data: NodeGroupData) => void
     setSelectedGroups: () => void
+    focusNode: (position: Position) => void
 }
 
 const NodeGroup: FC<Props> = ({
@@ -26,7 +27,8 @@ const NodeGroup: FC<Props> = ({
     nodes,
     selected,
     updateGroupData,
-    setSelectedGroups
+    setSelectedGroups,
+    focusNode,
 }) => {
     const [newColor, setNewColor] = useState<string>(color)
     const [showColors, toggleShowColors] = useState<boolean>(false)
@@ -116,10 +118,7 @@ const NodeGroup: FC<Props> = ({
                             >
                                 <button
                                     className="w-full text-left"
-                                    onClick={() => {
-                                        // TODO: move graph camera to node position
-                                        console.log(`node position is (x: ${node.position.x}, y: ${node.position.y})`)
-                                    }}
+                                    onClick={() => focusNode(node.position)}
                                 >
                                     {node.title}
                                 </button>

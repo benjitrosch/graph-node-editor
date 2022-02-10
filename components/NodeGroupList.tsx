@@ -2,6 +2,7 @@ import { CSSProperties, FC, useState } from "react"
 import clsx from 'clsx'
 
 import { NodeGroupData } from "../types/nodes"
+import { Position } from "../types/bounds"
 import { useGraphContext } from "../context/GraphContext"
 
 import NodeGroup from "./NodeGroup"
@@ -15,7 +16,13 @@ const NodeGroupList: FC<Props> = ({
     className,
     style
 }) => {
-    const { groups, nodes, setGroups } = useGraphContext()
+    const {
+        groups,
+        nodes,
+        setGroups,
+        setZoom,
+        setOffset
+    } = useGraphContext()
 
     const [selectedGroups, setSelectedGroups] = useState<number[]>([])
 
@@ -69,6 +76,17 @@ const NodeGroupList: FC<Props> = ({
                             selected={selectedGroups.includes(group.id)}
                             updateGroupData={(data: NodeGroupData) => updateGroupData(group.id, data)}
                             setSelectedGroups={() => setSelectedGroups((g) => selectedGroups.includes(group.id) ? g.filter((i) => i !== group.id) : g.concat(group.id))}
+                            focusNode={(position: Position) => {
+                                const { x, y } = position
+
+                                setZoom(1)
+
+                                // TODO: center on screen
+                                setOffset({
+                                    x: -x,
+                                    y: -y
+                                })
+                            }}
                         />
                     )
                 })}
