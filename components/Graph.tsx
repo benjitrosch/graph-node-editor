@@ -137,17 +137,25 @@ const Graph: FC<Props> = ({
         setNodes(newNodes)
     }, [nodes, setNodes])
 
-    const nodeById = (id: number): NodeMeta => {
+    const getNodeById = (id: number): NodeMeta => {
         const index = nodes.findIndex((node) => node.id === id)
         return nodes[index]
     }  
 
     const addNode = (type: NodeDataConnectionTypes, x: number, y: number) => {
+        // FIXME: this will become very slow at not very large numbers of nodes
+        // maybe switch from numeric id's to a unique hash? uuid?
+        let freeId = 0
+        while (nodes.some((n) => n.id === freeId)) {
+            freeId++;
+        }
+
         setNodes(nodes.concat({
-            id: nodes.length,
-            title: `test_node_0${nodes.length}`,
+            id: freeId,
+            title: `test_node_0${freeId}`,
             position: { x: x - (graphRef.current?.offsetLeft ?? 0) - offset.x, y: y - (graphRef.current?.offsetTop ?? 0) - offset.y },
             type,
+            group: groups.length > 0 ? 0 : undefined,
             connections: [],
             data: []
           }
@@ -177,24 +185,6 @@ const Graph: FC<Props> = ({
         newNodes.splice(index, 1)
 
         setNodes(newNodes)
-    }
-    
-    const getMidpointBetweenConnectors = (node: NodeMeta, connection: NodeDataConnection) => {
-        const n0 = nodeById(node.id)
-        const n1 = nodeById(connection.to.nodeId)
-
-        const p0 = { x: zoom * n0.position.x + offset.x, y: zoom * n0.position.y + offset.y }
-        const p1 = { x: zoom * n1.position.x + offset.x, y: zoom * n1.position.y + offset.y }
-
-        const x0 = p0.x //+ n0.size.width
-        const y0 = p0.y //+ (n0.size.height * 0.5) + connection.dataId * 24 // TODO: get ref of datarow to find pos
-        const x1 = p1.x
-        const y1 = p1.y //+ (n1.size.height * 0.5) + connection.to.dataId * 24 // TODO: get ref of datarow to find pos
-
-        const cx = (x0 + x1) / 2
-        const cy = (y0 + y1) / 2
-
-        return { x: cx, y: cy }
     }
 
     const drawConnectorToMousePath = () => {
@@ -368,7 +358,7 @@ const Graph: FC<Props> = ({
                                 const mod = checkDataSources(node.id, data.id)
                                 const value = mod ? data.value + mod : data.value
 
-                                const n0 = nodeById(node.id)                        
+                                const n0 = getNodeById(node.id)                        
                                 const p0 = { x: n0.position.x, y: n0.position.y }  
                                 const x0 = p0.x
                                 const y0 = p0.y //+ (n0.size.height * 0.5) + data.id * 24 // TODO: get ref of datarow to find pos    
@@ -444,8 +434,6 @@ const Graph: FC<Props> = ({
                         </Node>
 
                         {node.connections.map((connection, i) => {
-                            // const { x, y } = getMidpointBetweenConnectors(node, connection)
-
                             const style = {...lineStyle}
                             if (node.id === activeNode) {
                                 style.stroke = "#54ba08"
@@ -462,8 +450,8 @@ const Graph: FC<Props> = ({
                             const senderPosition = sender?.ref.current?.getPosition() ?? { x: 0, y: 0 } 
                             const receiverPosition = receiver?.ref.current?.getPosition() ?? { x: 0, y: 0 } 
 
-                            const n0 = nodeById(node.id)
-                            const n1 = nodeById(connection.to.nodeId)
+                            const n0 = getNodeById(node.id)
+                            const n1 = getNodeById(connection.to.nodeId)
                     
                             const p0 = { x: zoom * (n0.position.x + senderPosition.x + 8) + offset.x, y: zoom * (n0.position.y + senderPosition.y + 22) + offset.y }
                             const p1 = { x: zoom * (n1.position.x + receiverPosition.x + 8) + offset.x, y: zoom * (n1.position.y + receiverPosition.y + 22) + offset.y }                    
